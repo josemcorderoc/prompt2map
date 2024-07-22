@@ -16,31 +16,6 @@ class ChoroplethMap(StreamlitMap):
         self.legend_title = legend_title
         self.title = title
         
-        # self.fig = px.choropleth(
-        #     self.data,
-        #     geojson=self.data.geometry,
-        #     locations=self.data.index,
-        #     color=self.value_column,
-        #     color_continuous_scale=self.cmap,
-        #     title=self.title,
-        # )
-        # self.fig = px.choropleth_mapbox(
-        #     self.data,
-        #     geojson=self.data.geometry,
-        #     locations=self.data.index,
-        #     color=self.value_column,
-        #     color_continuous_scale=self.cmap,
-        #     title=self.title,
-        #     mapbox_style="open-street-map",
-        #     center={"lat": self.data.geometry.centroid.y.mean(), "lon": self.data.geometry.centroid.x.mean()},
-        #     zoom=10
-        # )
-
-
-        # self.fig.update_geos(fitbounds="locations", visible=False)
-        # self.fig.update_layout(coloraxis_colorbar=dict(title=self.legend_title))
-        
-        
         bounds = self.data.total_bounds  # [minx, miny, maxx, maxy]
         center = {
             "lat": (bounds[1] + bounds[3]) / 2,
@@ -59,19 +34,15 @@ class ChoroplethMap(StreamlitMap):
             title=self.title,
             mapbox_style="open-street-map",
             center=center,
-            zoom=zoom,  # This will be overridden by the update_geos call,
+            zoom=zoom,
             height=height,
             width=width
         )
 
         # Fit the map bounds to the locations
         self.fig.update_geos(fitbounds="locations", visible=False)
-        # self.fig.update_layout(mapbox_zoom=8)  # Adjust mapbox_zoom as needed for initial view
         self.fig.update_layout(coloraxis_colorbar=dict(title=self.legend_title))
-        
         self.fig.update_layout(margin=dict(l=0, r=0, t=0, b=0))
-        # fig.show()
-        # fig.show()
 
         
     def show(self) -> None:
