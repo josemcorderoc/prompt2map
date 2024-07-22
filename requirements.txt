@@ -1,0 +1,7 @@
+folium==0.17.0
+geopandas==1.0.1
+pandas==2.2.2
+plotly==5.22.0
+psycopg2==2.9.9
+scipy==1.14.0
+streamlit_folium==0.21.1
