@@ -8,7 +8,7 @@ import plotly.express as px
 from application.interfaces.streamlit_map import StreamlitMap
 
 
-class ChoroplethMapPlotly(StreamlitMap):
+class ChoroplethMap(StreamlitMap):
     def __init__(self, data: gpd.GeoDataFrame, value_column: str, cmap='viridis', legend_title='Legend', title='Choropleth Map', height=500, width=500) -> None:       
         self.data = data
         self.value_column = value_column
