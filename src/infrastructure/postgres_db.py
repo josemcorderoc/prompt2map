@@ -1,4 +1,6 @@
 
+from geopandas.geodataframe import GeoDataFrame
+import geopandas as gpd
 import psycopg2
 from application.interfaces.database import Database
 from sqlalchemy import create_engine, MetaData
@@ -73,6 +75,7 @@ class PostgresDB(Database):
                 
                 create_statements.append(create_statement)
             return "\n".join(create_statements)
-            
 
-    
+    def run_gpd_query(self, query: str) -> GeoDataFrame:
+        return gpd.read_postgis(query, self.conn) # type: ignore
+       

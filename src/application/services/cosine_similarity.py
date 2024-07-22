@@ -10,8 +10,8 @@ class CosineSimilarity(TextSimilarity):
         self.embedding = embedding
         
     def __call__(self, text1: str, text2: str) -> float:
-        emb1 = self.embedding.generate(text1)
-        emb2 = self.embedding.generate(text2)
+        emb1 = self.embedding.get_embedding(text1)
+        emb2 = self.embedding.get_embedding(text2)
         return 1 - spatial.distance.cosine(emb1, emb2).item()
 
     def most_similar(self, text: str, texts: list[str]) -> str:

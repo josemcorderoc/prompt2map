@@ -4,6 +4,6 @@ import numpy as np
 
 
 class Embedding(Protocol):
-    def generate(self, text: str) -> np.ndarray:
+    def get_embedding(self, text: str) -> np.ndarray:
         ...
     

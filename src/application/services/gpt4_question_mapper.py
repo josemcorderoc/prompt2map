@@ -1,29 +1,46 @@
+import logging
 import folium
-from application.interfaces.question_mapper import QuestionMapper
+import geopandas as gpd
+from application.interfaces.database import Database
+from application.interfaces.map_selector import MapSelector
+from application.interfaces.prompt_mapper import PromptMapper
+from application.interfaces.prompt_to_sql_model import PromptToSQLModel
+from application.interfaces.streamlit_map import StreamlitMap
+from application.services.sql_utils import is_read_only_query, to_geospatial_query
 
 
-class GPT4QuestionMapper(QuestionMapper):
-    def generate(self, question: str) -> folium.Map:
-        # dummy implementation
-        campuses = [
-            {"name": "Casa Central", "lat": -33.4489, "lon": -70.6610},
-            {"name": "Facultad de Ciencias Físicas y Matemáticas", "lat": -33.4169, "lon": -70.6551},
-            {"name": "Facultad de Ciencias Químicas y Farmacéuticas", "lat": -33.4586, "lon": -70.6633},
-            {"name": "Facultad de Economía y Negocios", "lat": -33.4594, "lon": -70.6350},
-            {"name": "Facultad de Medicina", "lat": -33.4196, "lon": -70.6498},
-            {"name": "Facultad de Ciencias", "lat": -33.5403, "lon": -70.5739},
-            {"name": "Facultad de Filosofía y Humanidades", "lat": -33.4628, "lon": -70.6544},
-            {"name": "Facultad de Derecho", "lat": -33.4418, "lon": -70.6551},
-            {"name": "Facultad de Ciencias Sociales", "lat": -33.4577, "lon": -70.6640},
-            {"name": "Facultad de Arquitectura y Urbanismo", "lat": -33.4513, "lon": -70.6528},
-            {"name": "Instituto de la Comunicación e Imagen", "lat": -33.4573, "lon": -70.6602},
-        ]
-
-        m = folium.Map(zoom_start=16)
-        for campus in campuses:
-            folium.Marker(
-                [campus["lat"], campus["lon"]], popup=campus["name"], tooltip=campus["name"]
-            ).add_to(m)
-
-        m.fit_bounds(m.get_bounds())
-        return m
+class GPT4QuestionMapper(PromptMapper):
+    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector) -> None:
+        self.prompt2sql = prompt2sql
+        self.db = db
+        self.map_selector = map_selector
+        
+    def generate(self, question: str) -> StreamlitMap:
+        # generate SQL query
+        prompt_sql_query = self.prompt2sql.to_sql(question)
+   
+        logging.info(f"SQL query generated:\n{prompt_sql_query}")
+        # validate
+        if not is_read_only_query(prompt_sql_query):
+            raise ValueError(f"Query {prompt_sql_query} is not a read-only query.")
+        
+        # TODO replace literals
+        
+        # add spatial columns
+        prompt_sql_query = to_geospatial_query(prompt_sql_query, {"comuna": "geom"})
+        
+        # TODO execute in test db
+        
+        # execute in real db
+        logging.info(f"Executing SQL query: {prompt_sql_query}")
+        gdf = self.db.run_gpd_query(prompt_sql_query)
+        
+        # TODO clean output data
+        
+        
+        # select map
+        map = self.map_selector.select_map(question, gdf)
+        if map is None:
+            raise ValueError(f"Could not generate map for question {question}")
+        return map
+        
