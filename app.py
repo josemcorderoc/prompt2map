@@ -1,20 +1,18 @@
 import logging
-from re import I
+import os
 import sys
-from dotenv import load_dotenv
-import folium
-import pandas as pd
+from re import I
+
 import streamlit as st
+from dotenv import load_dotenv
 from streamlit import session_state as ss
-from streamlit_folium import st_folium
 
 from application.interfaces.prompt_mapper import PromptMapper
-from application.services.llm_to_sql import LLMToSQL
 from application.services.gpt4_map_selector import GPT4MapSelector
 from application.services.gpt4_question_mapper import GPT4QuestionMapper
+from application.services.llm_to_sql import LLMToSQL
 from infrastructure.gpt4 import GPT4
 from infrastructure.postgres_db import PostgresDB
-import os
 
 logging.basicConfig(level=logging.INFO)
 sys.path.append("../src")
@@ -40,7 +38,7 @@ def main(question_mapper: PromptMapper):
         st.button("Create map 🗺️", on_click=create_map, key='classification', args=(user_input,))
         
     if ss.plotly_map:
-        map_data = st_folium(ss.plotly_map, width=1000, height=500)
+        ss.plotly_map.add_to_streamlit()
 
 if __name__ == "__main__":
     load_dotenv()
