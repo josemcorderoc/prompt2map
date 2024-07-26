@@ -5,7 +5,7 @@ from application.interfaces.streamlit_map import StreamlitMap
 
 import geopandas as gpd
 
-from application.maps.choropleth_map import ChoroplethMapPlotly
+from application.maps.choropleth_map import ChoroplethMap
 from infrastructure.gpt4 import GPT4
 
 def get_available_tools(data: gpd.GeoDataFrame):
@@ -36,7 +36,7 @@ def get_available_tools(data: gpd.GeoDataFrame):
     ]
 
 def create_choropleth_map(data: gpd.GeoDataFrame, title: str, value_column: str) -> StreamlitMap:
-    return ChoroplethMapPlotly(data=data, title=title, value_column=value_column)
+    return ChoroplethMap(data=data, title=title, value_column=value_column)
 
 available_functions = {
     "create_choropleth_map": create_choropleth_map,}
