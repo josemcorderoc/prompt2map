@@ -16,3 +16,5 @@ build/
 
 .env
 .DS_Store
+
+.git.bfg-report
