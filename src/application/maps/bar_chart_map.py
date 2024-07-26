@@ -1,3 +1,4 @@
+from typing import Optional
 import folium
 from matplotlib import pyplot as plt
 import pandas as pd
@@ -5,6 +6,8 @@ from shapely import MultiPolygon, Polygon
 from application.interfaces.streamlit_map import StreamlitMap
 import geopandas as gpd
 from streamlit_folium import st_folium
+import plotly.express as px
+
 
 def average_bounding_boxes(s: gpd.GeoSeries) -> tuple[float, float]:
     miny, minx, maxy, maxx = s.bounds.mean()
@@ -22,7 +25,7 @@ def bar_chart_gdf(df: gpd.GeoDataFrame, values_cols: list[str], **kwargs) -> gpd
     bar_chart_s = bar_chart(df, values_cols, **kwargs)
     bars = pd.DataFrame(bar_chart_s.apply(lambda poly: poly.geoms).to_list(), columns=values_cols, index=bar_chart_s.index).rename_axis("category", axis=1).unstack()
     bar_values = df[values_cols].rename_axis("category", axis=1).unstack()
-    gdf = gpd.GeoDataFrame(pd.concat([bar_values.rename("value"), bars.rename("poly")], axis=1), geometry='poly', crs=df.crs).reset_index()
+    gdf = gpd.GeoDataFrame(bar_values.rename("value"), geometry=bars, crs=df.crs).reset_index()
     return gdf
 
 def draw_bar_polygon(polygon: Polygon, bar_values: list[float], max_value: float, scale: tuple[float, float] = (1, 1), offset: tuple[float, float] = (0, 0)) -> MultiPolygon:
@@ -95,27 +98,36 @@ def plot_polygons(polygons):
     plt.show()
     
 class BarChartMap(StreamlitMap):
-    def __init__(self, data: gpd.GeoDataFrame, value_columns: list[str], height=500, width=500) -> None:
+    def __init__(self, data: gpd.GeoDataFrame, value_columns: list[str], height=500, width=500, colors: Optional[list[str]] = None) -> None:
         self.data = data
         self.value_columns = value_columns
         self.height = height
         self.width = width
         
-        self.fig = folium.Map(location=[data.centroid.y.mean(), data.centroid.x.mean()], zoom_start=12)
+        self.fig = folium.Map()
+        self.raw_bars = bar_chart(data, value_columns)
+        self.bars = bar_chart_gdf(data, value_columns)
         
-        self.bars = bar_chart_gdf(data, ["score1", "score2", "score3"])
+        if colors is None:
+            colors = px.colors.qualitative.Plotly[:len(value_columns)]
+        colors_cols = dict(zip(value_columns, colors))
         
-        self.fig = folium.Map(location=[-33.45, -70.66], zoom_start=10)
-        
-        colors = {
-            "score1": "blue",
-            "score2": "green",
-            "score3": "red"
-        }
+        def style(feature):
+            return {
+                'fillColor': colors_cols.get(feature['properties']['category']),
+                'fillOpacity': 0.8,
+                'color': 'black',
+                'opacity': 1
+            }
 
         folium.GeoJson(data, tooltip=folium.GeoJsonTooltip(fields=["nombre"], aliases=["Nombre"], localize=True)).add_to(self.fig)
-        folium.GeoJson(self.bars, style_function=lambda feature: {'fillColor': colors.get(feature['properties']['category']), 'fillOpacity':0.8},
-                       tooltip=folium.GeoJsonTooltip(fields=["category", "value"], aliases=["Candidato", "Valor"], localize=True)).add_to(self.fig)
+        folium.GeoJson(self.bars, style_function=style, tooltip=folium.GeoJsonTooltip(
+            fields=["category", "value"],
+            aliases=["Candidato", "Valor"],
+            localize=True)
+        ).add_to(self.fig)
+        
+        self.fig.fit_bounds(self.fig.get_bounds())
             
     def show(self) -> None:
         self.fig.show_in_browser()
