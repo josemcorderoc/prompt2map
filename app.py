@@ -16,8 +16,8 @@ from application.services.sql_query_processor import SQLQueryProcessor
 from infrastructure.gpt4 import GPT4
 from infrastructure.postgres_db import PostgresDB
 
-logging.basicConfig(level=logging.INFO)
-sys.path.append("../src")
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
+# sys.path.append("../src")
 
 for attribute in ["plotly_map"]:
     if attribute not in ss:

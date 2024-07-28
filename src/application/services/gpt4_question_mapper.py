@@ -13,11 +13,10 @@ from application.services.sql_utils import is_read_only_query, to_geospatial_que
 
 class GPT4QuestionMapper(PromptMapper):
     def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector, text_similarity: TextSimilarity, sql_query_processor: SQLQueryProcessor) -> None:
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.prompt2sql = prompt2sql
         self.db = db
         self.map_selector = map_selector
-        self.text_similarity = text_similarity
-        self.sql_query_processor = sql_query_processor
         self.text_similarity = text_similarity
         self.sql_query_processor = sql_query_processor
         
@@ -25,7 +24,7 @@ class GPT4QuestionMapper(PromptMapper):
         # generate SQL query
         prompt_sql_query = self.prompt2sql.to_sql(question)
    
-        logging.info(f"SQL query generated:\n{prompt_sql_query}")
+        self.logger.info(f"SQL query generated:\n{prettify_sql(prompt_sql_query)}")
         # validate
         if not is_read_only_query(prompt_sql_query):
             raise ValueError(f"Query {prompt_sql_query} is not a read-only query.")
@@ -34,16 +33,21 @@ class GPT4QuestionMapper(PromptMapper):
         prompt_sql_query = self.sql_query_processor.replace_literals(prompt_sql_query)
         
         
+        self.logger.debug(f"SQL query with literals replaced:\n{prettify_sql(prompt_sql_query)}")
         # add spatial columns
         prompt_sql_query = to_geospatial_query(prompt_sql_query, {"comuna": "geom"})
         
-        # TODO execute in test db
+        self.logger.debug(f"SQL query with spatial columns added:\n{prettify_sql(prompt_sql_query)}")
+        
+        # TODO #7 execute in test db
         
         # execute in real db
-        logging.info(f"Executing SQL query: {prompt_sql_query}")
+        self.logger.debug(f"Executing SQL query...")
         gdf = self.db.run_gpd_query(prompt_sql_query)
         if len(gdf) == 0:
             raise ValueError(f"Query returned no data")
+        
+        self.logger.info(f"Dataframe generated.\nSize: {len(gdf)}\nColumns: {gdf.columns}")
         
         # TODO clean output data
         
