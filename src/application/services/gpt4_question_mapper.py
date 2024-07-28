@@ -12,12 +12,11 @@ from application.services.sql_utils import is_read_only_query, to_geospatial_que
 
 
 class GPT4QuestionMapper(PromptMapper):
-    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector, text_similarity: TextSimilarity, sql_query_processor: SQLQueryProcessor) -> None:
+    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector, sql_query_processor: SQLQueryProcessor) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.prompt2sql = prompt2sql
         self.db = db
         self.map_selector = map_selector
-        self.text_similarity = text_similarity
         self.sql_query_processor = sql_query_processor
         
     def generate(self, question: str) -> StreamlitMap:

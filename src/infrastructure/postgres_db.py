@@ -95,21 +95,24 @@ class PostgresDB(Database):
     def get_literals(self, table: str, column: str) -> list[Any]:
         return pd.read_sql(f"SELECT DISTINCT {column} FROM {table}", con=self.engine)[column].to_list()
 
-    def get_most_similar(self, table: str, column: str, text_embedding: list[float], embedding_suffix: Optional[str]) -> Any:
-        # TODO: Implement this method
-        embedding_str = json.dumps(text_embedding)
-        order_by = column if embedding_suffix is None else column + embedding_suffix
-        
-        query = f"""SELECT {column} 
-        FROM {table} 
-        ORDER BY {order_by} <=> '{embedding_str}' LIMIT 1;"""
+    def get_most_similar_cosine(self, table: str, column: str, text_embedding: list[float], embedding_suffix: str) -> str:
+        embedding_str = json.dumps(text_embedding,  separators=(',', ':'))
+
+        query = f"""
+            SELECT {column} 
+            FROM {table} 
+            ORDER BY {column}__{embedding_suffix} <=> '{embedding_str}' 
+            LIMIT 1;"""
+            
         result = pd.read_sql(query, con=self.engine)[column].iloc[0]
         if len(result) == 0:
             raise ValueError(f"No similar value found in {table}.{column}")
+        
         return result
     
     def get_most_similar_levenshtein(self, table: str, column: str, text: str) -> str:
-        query = f"""SELECT {column} 
+        query = f"""
+            SELECT {column} 
             FROM {table} 
             ORDER BY levenshtein({column}, %s) 
             LIMIT 1;"""

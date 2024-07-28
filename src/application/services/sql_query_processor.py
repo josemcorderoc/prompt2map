@@ -1,6 +1,7 @@
 import logging
 from sqlglot import parse_one, exp
 from application.interfaces.database import Database
+from application.interfaces.embedding import Embedding
 from application.interfaces.text_similarity import TextSimilarity
 import sqlparse
 
@@ -33,9 +34,11 @@ def prettify_sql(query: str) -> str:
     return sqlparse.format(query, reindent=True, keyword_case='upper')
     
 class SQLQueryProcessor:
-    def __init__(self, db: Database) -> None:
+    def __init__(self, db: Database, embedding: Embedding
+                 ) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.db = db
+        self.embedding = embedding
     
     def get_literals(self, parsed_query: exp.Expression) -> dict[tuple[str, str], exp.Literal]:
         # parsed_query = parse_one(query)
@@ -92,7 +95,9 @@ class SQLQueryProcessor:
         for (table_name, column_name), literal in query_literals.items():
             col_type = self.db.get_column_type(table_name, column_name)
             if col_type == "text":
-                most_similar_literal = self.db.get_most_similar_levenshtein(table_name, column_name, str(literal))
+                text_embedding = self.embedding.get_embedding(str(literal)).tolist()
+                # most_similar_literal = self.db.get_most_similar_levenshtein(table_name, column_name, str(literal))
+                most_similar_literal = self.db.get_most_similar_cosine(table_name, column_name, text_embedding, "emb_openai_small")
                 most_similar_literal = f"'{most_similar_literal}'"
                 self.logger.info(f"Replacing literal {literal} with {most_similar_literal} (most similar).")
                 literal.replace(most_similar_literal)

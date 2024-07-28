@@ -18,7 +18,7 @@ class Database(Protocol):
     def get_literals_multi(self, tables_columns: list[tuple[str, str]]) -> dict[tuple[str, str], list[Any]]:
         ...
         
-    def get_most_similar(self, table: str, column: str, value: str) -> Any:
+    def get_most_similar_cosine(self, table: str, column: str, text_embedding: list[float], embedding_suffix: str) -> str:
         ...
         
     def get_most_similar_levenshtein(self, table: str, column: str, text: str) -> str:
