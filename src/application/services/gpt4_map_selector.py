@@ -26,7 +26,7 @@ def get_available_tools(data: gpd.GeoDataFrame):
                         },
                         "value_column": {
                             "type": "string",
-                            "enum": list(data.columns),
+                            "enum": list(data.select_dtypes(include='number').columns),
                             "description": "The column to use for the choropleth map",
                         }
                         
@@ -34,6 +34,7 @@ def get_available_tools(data: gpd.GeoDataFrame):
                     "required": ["title", "value_column"],
                 },
             }
+        },
         {
             "type": "function",
             "function": {
@@ -46,9 +47,8 @@ def get_available_tools(data: gpd.GeoDataFrame):
                             "type": "array",
                             "items": {
                                 "type": "string",
-                                "enum": list(data.columns)
+                                "enum": list(data.select_dtypes(include='number').columns)
                             },
-                            "enum": list(data.columns),
                             "description": "The columns that will turn bars in the map.",
                         }
                         
@@ -56,7 +56,6 @@ def get_available_tools(data: gpd.GeoDataFrame):
                     "required": ["value_columns"],
                 },
             }
-        },
         },
     ]
 
@@ -102,5 +101,4 @@ class GPT4MapSelector(MapSelector):
         )
         self.logger.info(f"Function response: {function_response}")
         
-        return function_response
         return function_response
