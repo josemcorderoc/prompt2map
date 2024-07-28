@@ -1,17 +1,14 @@
 import logging
 import os
 from pathlib import Path
-import sys
 from re import I
 
 import pyproj
 import streamlit as st
 from dotenv import load_dotenv
 from streamlit import session_state as ss
-from streamlit_folium import folium_static
 
 from application.interfaces.prompt_mapper import PromptMapper
-from application.services.cosine_similarity import CosineSimilarity
 from application.services.gpt4_map_selector import GPT4MapSelector
 from application.services.gpt4_question_mapper import GPT4QuestionMapper
 from application.services.llm_to_sql import LLMToSQL
@@ -20,7 +17,6 @@ from infrastructure.gpt4 import GPT4
 from infrastructure.postgres_db import PostgresDB
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
-# sys.path.append("../src")
 
 for attribute in ["map"]:
     if attribute not in ss:
@@ -43,9 +39,7 @@ def main(question_mapper: PromptMapper):
         st.button("Create map 🗺️", on_click=create_map, key='classification', args=(user_input,))
         
     if ss.map:
-        # ss.map.show()
-        st_data = folium_static(ss.map.fig)
-        # ss.map.add_to_streamlit()
+        ss.map.add_to_streamlit()
 
 if __name__ == "__main__":
     load_dotenv()

@@ -1,5 +1,5 @@
 import geopandas as gpd
-from streamlit_folium import st_folium
+from streamlit_folium import folium_static
 
 from application.interfaces.streamlit_map import StreamlitMap
 
@@ -15,4 +15,4 @@ class ChoroplethMap(StreamlitMap):
         self.fig.show_in_browser()
     
     def add_to_streamlit(self) -> None:
-        st_data = st_folium(self.fig)
+        st_data = folium_static(self.fig)
