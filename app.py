@@ -12,13 +12,13 @@ from application.interfaces.prompt_mapper import PromptMapper
 from application.services.gpt4_map_selector import GPT4MapSelector
 from application.services.gpt4_question_mapper import GPT4QuestionMapper
 from application.services.llm_to_sql import LLMToSQL
-from application.services.sql_query_processor import SQLQueryProcessor
+from application.services.sql_query_processor import SQLQueryProcessor, prettify_sql
 from infrastructure.gpt4 import GPT4
 from infrastructure.postgres_db import PostgresDB
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 
-for attribute in ["map"]:
+for attribute in ["map", "data", "query"]:
     if attribute not in ss:
         ss[attribute] = None
 
@@ -31,7 +31,9 @@ def main(question_mapper: PromptMapper):
     
     def create_map(prompt_input: str):
         logging.info(f"Creating map for: {prompt_input}")
-        ss["map"] = question_mapper.generate(prompt_input)   
+        
+        ss["map"], ss["data"], ss["query"] = question_mapper.generate(prompt_input)   
+        logging.info(ss["map"], ss["data"], ss["query"])
 
     user_input = st.text_area("Ask me a question", key="user_input")
 
@@ -39,8 +41,17 @@ def main(question_mapper: PromptMapper):
         st.button("Create map 🗺️", on_click=create_map, key='classification', args=(user_input,))
         
     if ss.map:
-        ss.map.add_to_streamlit()
-
+        map_tab, data_tab, sql_tab = st.tabs(["Map", "Data", "SQL"])
+        with map_tab:
+            ss.map.add_to_streamlit()
+            
+        with data_tab:
+            st.dataframe(ss["data"])
+            
+        with sql_tab:
+            st.code(prettify_sql(ss["query"]), language="sql")
+        
+        
 if __name__ == "__main__":
     load_dotenv()
     proj_lib = os.environ.get("PROJ_LIB")

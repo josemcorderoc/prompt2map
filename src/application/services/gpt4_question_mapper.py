@@ -21,7 +21,7 @@ class GPT4QuestionMapper(PromptMapper):
         self.sql_query_processor = sql_query_processor
         self.test_db = test_db
         
-    def generate(self, question: str) -> StreamlitMap:
+    def generate(self, question: str) -> tuple[StreamlitMap, pd.DataFrame, str]:
         # generate SQL query
         st.info("Generating SQL query...")
         prompt_sql_query = self.prompt2sql.to_sql(question)
@@ -65,4 +65,5 @@ class GPT4QuestionMapper(PromptMapper):
         if map is None:
             raise ValueError(f"Could not generate map for question {question}")
         st.success("Map generated.")
+        return map, pd.DataFrame(gdf.drop(columns=gdf.geometry.name)), prompt_sql_query
         
