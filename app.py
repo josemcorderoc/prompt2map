@@ -8,9 +8,11 @@ from dotenv import load_dotenv
 from streamlit import session_state as ss
 
 from application.interfaces.prompt_mapper import PromptMapper
+from application.services.cosine_similarity import CosineSimilarity
 from application.services.gpt4_map_selector import GPT4MapSelector
 from application.services.gpt4_question_mapper import GPT4QuestionMapper
 from application.services.llm_to_sql import LLMToSQL
+from application.services.sql_query_processor import SQLQueryProcessor
 from infrastructure.gpt4 import GPT4
 from infrastructure.postgres_db import PostgresDB
 
@@ -56,5 +58,7 @@ if __name__ == "__main__":
     gpt4 = GPT4()
     gpt2sql = LLMToSQL(llm=gpt4, db_schema=db_schema)
     gpt4_mapselector = GPT4MapSelector(gpt4=gpt4)
-    gpt4_question_mapper = GPT4QuestionMapper(db=db, prompt2sql=gpt2sql, map_selector=gpt4_mapselector)
+    cosine_similarity = CosineSimilarity(gpt4)
+    sql_query_processor = SQLQueryProcessor(db=db)
+    gpt4_question_mapper = GPT4QuestionMapper(db=db, prompt2sql=gpt2sql, map_selector=gpt4_mapselector, text_similarity=cosine_similarity, sql_query_processor=sql_query_processor)
     main(gpt4_question_mapper)

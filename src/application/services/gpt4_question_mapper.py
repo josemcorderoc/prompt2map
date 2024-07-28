@@ -6,14 +6,20 @@ from application.interfaces.map_selector import MapSelector
 from application.interfaces.prompt_mapper import PromptMapper
 from application.interfaces.prompt_to_sql_model import PromptToSQLModel
 from application.interfaces.streamlit_map import StreamlitMap
+from application.interfaces.text_similarity import TextSimilarity
+from application.services.sql_query_processor import SQLQueryProcessor, prettify_sql
 from application.services.sql_utils import is_read_only_query, to_geospatial_query
 
 
 class GPT4QuestionMapper(PromptMapper):
-    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector) -> None:
+    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector, text_similarity: TextSimilarity, sql_query_processor: SQLQueryProcessor) -> None:
         self.prompt2sql = prompt2sql
         self.db = db
         self.map_selector = map_selector
+        self.text_similarity = text_similarity
+        self.sql_query_processor = sql_query_processor
+        self.text_similarity = text_similarity
+        self.sql_query_processor = sql_query_processor
         
     def generate(self, question: str) -> StreamlitMap:
         # generate SQL query
@@ -24,7 +30,9 @@ class GPT4QuestionMapper(PromptMapper):
         if not is_read_only_query(prompt_sql_query):
             raise ValueError(f"Query {prompt_sql_query} is not a read-only query.")
         
-        # TODO replace literals
+        # replace literals
+        prompt_sql_query = self.sql_query_processor.replace_literals(prompt_sql_query)
+        
         
         # add spatial columns
         prompt_sql_query = to_geospatial_query(prompt_sql_query, {"comuna": "geom"})
@@ -34,6 +42,8 @@ class GPT4QuestionMapper(PromptMapper):
         # execute in real db
         logging.info(f"Executing SQL query: {prompt_sql_query}")
         gdf = self.db.run_gpd_query(prompt_sql_query)
+        if len(gdf) == 0:
+            raise ValueError(f"Query returned no data")
         
         # TODO clean output data
         

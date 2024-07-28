@@ -1,10 +1,15 @@
 
+import re
+from typing import Any, Optional
 from geopandas.geodataframe import GeoDataFrame
 import geopandas as gpd
+import numpy as np
+import pandas as pd
 import psycopg2
 from application.interfaces.database import Database
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.sql import text
+import json
 
 class PostgresDB(Database):
     def __init__(self, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432) -> None:
@@ -77,5 +82,52 @@ class PostgresDB(Database):
             return "\n".join(create_statements)
 
     def run_gpd_query(self, query: str) -> GeoDataFrame:
-        return gpd.read_postgis(query, self.conn) # type: ignore
+        return gpd.read_postgis(query, self.conn)  # type: ignore
+
+    def get_literals_multi(self, tables_columns: list[tuple[str, str]]) -> dict[tuple[str, str], list[Any]]:
+        return { (table, column): self.get_literals(table, column) for table, column in tables_columns }
+
+    def get_literals(self, table: str, column: str) -> list[Any]:
+        return pd.read_sql(f"SELECT DISTINCT {column} FROM {table}", con=self.engine)[column].to_list()
+
+    def get_most_similar(self, table: str, column: str, text_embedding: list[float], embedding_suffix: Optional[str]) -> Any:
+        # TODO: Implement this method
+        embedding_str = json.dumps(text_embedding)
+        order_by = column if embedding_suffix is None else column + embedding_suffix
+        
+        query = f"""SELECT {column} 
+        FROM {table} 
+        ORDER BY {order_by} <=> '{embedding_str}' LIMIT 1;"""
+        result = pd.read_sql(query, con=self.engine)[column].iloc[0]
+        if len(result) == 0:
+            raise ValueError(f"No similar value found in {table}.{column}")
+        return result
+    
+    def get_most_similar_levenshtein(self, table: str, column: str, text: str) -> str:
+        query = f"""SELECT {column} 
+            FROM {table} 
+            ORDER BY levenshtein({column}, %s) 
+            LIMIT 1;"""
+        result = pd.read_sql(query, con=self.engine, params=(text,))
+        result_value = result[column].iloc[0]
+        
+        if len(result) == 0 or result_value is None:
+            raise ValueError(f"No similar value found in {table}.{column}")
+        
+        return result_value
+
+    def get_column_type(self, table_name: str, column_name: str) -> Optional[str]:
+        query = """
+        SELECT data_type
+        FROM information_schema.columns
+        WHERE table_name = %s AND column_name = %s;
+        """
+        with self.conn.cursor() as cursor:
+            cursor.execute(query, (table_name, column_name))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                return None
+
        

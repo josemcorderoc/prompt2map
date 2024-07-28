@@ -2,7 +2,6 @@ from bidict import bidict
 import numpy as np
 from sqlglot import parse_one, exp
 
-from application.interfaces.text_similarity import TextSimilarity
 
 def is_read_only_query(query: str) -> bool:
     parsed_query = parse_one(query)
@@ -11,42 +10,6 @@ def is_read_only_query(query: str) -> bool:
     expression = parsed_query.find(exp.Insert, exp.Update, exp.Delete)
     return expression is None
 
-
-def replace_literals(query: str, literals: dict[tuple[str, str], list[str]], similarity: TextSimilarity) -> str:
-    parsed_query = parse_one(query)
-    if parsed_query is None:
-        raise ValueError(f"Query {query} could not be parsed.")
-    table_alias = {t.alias:t.name for t in parsed_query.find_all(exp.Table)}
-    
-    table_names = [t.name for t in parsed_query.find_all(exp.Table)]
-    if len(table_names) == 0:
-        raise ValueError(f"Query {query} does not contain any table names.")
-    
-    where = parsed_query.find(exp.Where)
-    if where is None:
-        return parsed_query.sql()
-    
-    for eq in where.find_all(exp.EQ):
-        literal, column  = eq.find(exp.Literal), eq.find(exp.Column)
-        if literal is None or column is None:
-            continue
-        
-        table_name = column.table
-        column_name = column.name
-        
-        if table_name in table_alias:
-                table_name = table_alias[table_name]
-        elif table_name == "":
-                table_name = table_names[0]
-                
-        if (table_name, column_name) not in literals:
-            continue
-            # raise ValueError(f"Table {table_name} not found in literals.")
-
-        most_similar_literal = similarity.most_similar(str(literal), literals[(table_name, column_name)])
-        literal.replace(most_similar_literal)
-        
-    return parsed_query.sql()
 
 def to_geospatial_query(query: str, geospatial_columns: dict[str, str]) -> str:
     parsed_query = parse_one(query)
@@ -68,11 +31,13 @@ def to_geospatial_query(query: str, geospatial_columns: dict[str, str]) -> str:
         raise ValueError(f"Query {query} does not contain a SELECT clause.")
     
     # if select contains comuna, add geom
-    geospatial_exp = [e for e in select.expressions if type(e) == exp.Column and table_alias[e.table] in geospatial_columns.keys()]
+    # geospatial_exp = [e for e in select.expressions if type(e) == exp.Column and table_alias[e.table] in geospatial_columns.keys()]
+    
+    
     if len(set(table_names).intersection(set(geospatial_columns.keys()))) > 0 and group_by is None:
-        new_column = exp.Column(this=exp.Identifier(this=geospatial_columns[table_alias[geospatial_exp[0].table]]))
-        if geospatial_exp[0].table != "":
-            new_column = exp.Column(this=exp.Identifier(this=geospatial_columns[table_alias[geospatial_exp[0].table]]), table=exp.Identifier(this=geospatial_exp[0].table))
+        new_column = exp.Column(this=exp.Identifier(this="geom"))
+        # if geospatial_exp[0].table != "":
+        #     new_column = exp.Column(this=exp.Identifier(this=geospatial_columns[table_alias[geospatial_exp[0].table]]), table=exp.Identifier(this=geospatial_exp[0].table))
         select.expressions.append(new_column)   
     elif group_by is not None:
         group_by_tables = [table_alias[e.table] for e in group_by.expressions if type(e) == exp.Column and table_alias[e.table] not in geospatial_columns.keys()]
