@@ -40,7 +40,7 @@ def to_geospatial_query(query: str, geospatial_columns: dict[str, str]) -> str:
         #     new_column = exp.Column(this=exp.Identifier(this=geospatial_columns[table_alias[geospatial_exp[0].table]]), table=exp.Identifier(this=geospatial_exp[0].table))
         select.expressions.append(new_column)   
     elif group_by is not None:
-        group_by_tables = [table_alias[e.table] for e in group_by.expressions if type(e) == exp.Column and table_alias[e.table] not in geospatial_columns.keys()]
+        group_by_tables = [table_alias[e.table] for e in group_by.expressions if type(e) == exp.Column and e.table in table_alias and table_alias[e.table] not in geospatial_columns.keys()]
         for geotable, geocol in geospatial_columns.items():
             if geotable not in group_by_tables:
                 # aggregation = exp.Anonymous(func=exp.Identifier(this="ST_Union"), args=[exp.Column(this=exp.Identifier(this=geocol))])
