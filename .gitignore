@@ -18,3 +18,6 @@ build/
 .DS_Store
 
 .git.bfg-report
+
+# Data
+*.jsonl
