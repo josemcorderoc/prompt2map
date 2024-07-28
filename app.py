@@ -3,6 +3,7 @@ import os
 import sys
 from re import I
 
+import pyproj
 import streamlit as st
 from dotenv import load_dotenv
 from streamlit import session_state as ss
@@ -44,6 +45,9 @@ def main(question_mapper: PromptMapper):
 
 if __name__ == "__main__":
     load_dotenv()
+    proj_lib = os.environ.get("PROJ_LIB")
+    if proj_lib:
+        pyproj.datadir.set_data_dir(proj_lib)
     
     db_name = os.environ.get("DB_NAME")
     db_user = os.environ.get("DB_USER")
