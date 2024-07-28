@@ -19,7 +19,7 @@ from infrastructure.postgres_db import PostgresDB
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(funcName)s - %(levelname)s - %(message)s')
 # sys.path.append("../src")
 
-for attribute in ["plotly_map"]:
+for attribute in ["map"]:
     if attribute not in ss:
         ss[attribute] = None
 
@@ -32,15 +32,15 @@ def main(question_mapper: PromptMapper):
     
     def create_map(prompt_input: str):
         logging.info(f"Creating map for: {prompt_input}")
-        ss["plotly_map"] = question_mapper.generate(prompt_input)   
+        ss["map"] = question_mapper.generate(prompt_input)   
 
     user_input = st.text_area("Ask me a question", key="user_input")
 
     if ss.user_input:
         st.button("Create map 🗺️", on_click=create_map, key='classification', args=(user_input,))
         
-    if ss.plotly_map:
-        ss.plotly_map.add_to_streamlit()
+    if ss.map:
+        ss.map.add_to_streamlit()
 
 if __name__ == "__main__":
     load_dotenv()
