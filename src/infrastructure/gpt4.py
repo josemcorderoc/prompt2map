@@ -1,6 +1,8 @@
 from email import message
+import json
 from pyexpat.errors import messages
 from typing import Any, Optional
+from click import Option
 import jsonlines
 import numpy as np
 from openai import OpenAI
@@ -105,6 +107,8 @@ class GPT4(LLM, Embedding):
     def get_batch(self, batch_id: str) -> Batch:
         return self.client.batches.retrieve(batch_id)
 
-    def get_batch_result(self, output_file_id: str, output_path: str):
+    def get_batch_result(self, output_file_id: str, output_path: Optional[str] = None) -> list[dict]:
         content = self.client.files.content(output_file_id)
-        content.write_to_file(output_path)
+        if output_path:
+            content.write_to_file(output_path)
+        return list(map(json.loads, content.iter_lines()))
