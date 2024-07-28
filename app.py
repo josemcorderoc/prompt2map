@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 import sys
 from re import I
 
@@ -57,8 +58,10 @@ if __name__ == "__main__":
         raise ValueError("Please set the DB_NAME, DB_USER, and DB_PASSWORD environment variables.")
     
     db = PostgresDB(db_name=db_name, db_user=db_user, db_password=db_password)
-    db_schema = db.get_schema()
-    # logging.info(f"Database schema:\n{db_schema}")
+    # db_schema = db.get_schema()
+    db_schema = Path("data", "db", "schema.sql").read_text()
+    logging.info(f"Database schema:\n{db_schema}")
+    
     gpt4 = GPT4()
     gpt2sql = LLMToSQL(llm=gpt4, db_schema=db_schema)
     gpt4_mapselector = GPT4MapSelector(gpt4=gpt4)
