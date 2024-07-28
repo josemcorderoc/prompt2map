@@ -1,12 +1,12 @@
 import logging
-import folium
-import geopandas as gpd
+import pandas as pd
+import streamlit as st
+
 from application.interfaces.database import Database
 from application.interfaces.map_selector import MapSelector
 from application.interfaces.prompt_mapper import PromptMapper
 from application.interfaces.prompt_to_sql_model import PromptToSQLModel
 from application.interfaces.streamlit_map import StreamlitMap
-from application.interfaces.text_similarity import TextSimilarity
 from application.services.sql_query_processor import SQLQueryProcessor, prettify_sql
 from application.services.sql_utils import is_read_only_query, to_geospatial_query
 
@@ -21,8 +21,9 @@ class GPT4QuestionMapper(PromptMapper):
         self.sql_query_processor = sql_query_processor
         self.test_db = test_db
         
-    def generate(self, question: str) -> StreamlitMap:
+    def generate(self, question: str) -> tuple[StreamlitMap, pd.DataFrame, str]:
         # generate SQL query
+        st.info("Generating SQL query...")
         prompt_sql_query = self.prompt2sql.to_sql(question)
    
         self.logger.info(f"SQL query generated:\n{prettify_sql(prompt_sql_query)}")
@@ -47,8 +48,11 @@ class GPT4QuestionMapper(PromptMapper):
         
         # execute in real db
         self.logger.debug(f"Executing SQL query...")
+        st.info("Query generated. Obtaining data...")
+        
         gdf = self.db.run_gpd_query(prompt_sql_query)
         if len(gdf) == 0:
+            st.error("Query returned no data. Please try rephrasing your question.")
             raise ValueError(f"Query returned no data")
         
         self.logger.info(f"Dataframe generated.\nSize: {len(gdf)}\nColumns: {gdf.columns}")
@@ -60,5 +64,6 @@ class GPT4QuestionMapper(PromptMapper):
         map = self.map_selector.select_map(question, gdf)
         if map is None:
             raise ValueError(f"Could not generate map for question {question}")
-        return map
+        st.success("Map generated.")
+        return map, pd.DataFrame(gdf.drop(columns=gdf.geometry.name)), prompt_sql_query
         
