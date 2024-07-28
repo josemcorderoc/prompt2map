@@ -8,6 +8,7 @@ import pyproj
 import streamlit as st
 from dotenv import load_dotenv
 from streamlit import session_state as ss
+from streamlit_folium import folium_static
 
 from application.interfaces.prompt_mapper import PromptMapper
 from application.services.cosine_similarity import CosineSimilarity
@@ -42,7 +43,9 @@ def main(question_mapper: PromptMapper):
         st.button("Create map 🗺️", on_click=create_map, key='classification', args=(user_input,))
         
     if ss.map:
-        ss.map.add_to_streamlit()
+        # ss.map.show()
+        st_data = folium_static(ss.map.fig)
+        # ss.map.add_to_streamlit()
 
 if __name__ == "__main__":
     load_dotenv()
@@ -58,9 +61,7 @@ if __name__ == "__main__":
         raise ValueError("Please set the DB_NAME, DB_USER, and DB_PASSWORD environment variables.")
     
     db = PostgresDB(db_name=db_name, db_user=db_user, db_password=db_password)
-    # db_schema = db.get_schema()
     db_schema = Path("data", "db", "schema.sql").read_text()
-    logging.info(f"Database schema:\n{db_schema}")
     
     gpt4 = GPT4()
     gpt2sql = LLMToSQL(llm=gpt4, db_schema=db_schema)

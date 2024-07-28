@@ -60,6 +60,7 @@ def get_available_tools(data: gpd.GeoDataFrame):
     ]
 
 def create_choropleth_map(data: gpd.GeoDataFrame, title: str, value_column: str) -> StreamlitMap:
+    # TODO check if any processing is needed
     return ChoroplethMap(data=data, title=title, value_column=value_column)
 
 def create_bar_chart_map(data: gpd.GeoDataFrame, value_columns: list[str]) -> StreamlitMap:
