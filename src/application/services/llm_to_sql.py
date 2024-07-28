@@ -8,10 +8,10 @@ import re
 class LLMToSQL(PromptToSQLModel):   
     def __init__(self, llm: LLM, db_schema: Optional[str] = None) -> None:
         self.system_prompt = "You are a helpful assistant designed to output only valid SQL queries. Ensure that the query is valid and answers the question."
-        
-        self.user_prompt_template = "Write a SQL query that answer this question:\n{question}."
         if db_schema:
-            self.user_prompt_template += f"\nUse this database schema:\n{db_schema}."
+            self.system_prompt += f"\nUse the following database schema:\n{db_schema}."
+        self.user_prompt_template = "Write a SQL query that answer this question:\n{question}."
+        
         self.llm = llm
     
     def to_sql(self, prompt: str) -> str:
@@ -21,8 +21,3 @@ class LLMToSQL(PromptToSQLModel):
         if match:
             return match.group(1)
         return response
-            # Handle the case when no SQL query is found
-        # if response.startswith("```sql"):
-        #     # remove formatting
-        #     response = "\n".join(response.split("\n")[1:-1])
-        # return response
