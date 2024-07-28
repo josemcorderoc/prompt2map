@@ -12,12 +12,14 @@ from application.services.sql_utils import is_read_only_query, to_geospatial_que
 
 
 class GPT4QuestionMapper(PromptMapper):
-    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector, sql_query_processor: SQLQueryProcessor) -> None:
+    def __init__(self, db: Database, prompt2sql: PromptToSQLModel, map_selector: MapSelector, sql_query_processor: SQLQueryProcessor,
+                 test_db: Database) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.prompt2sql = prompt2sql
         self.db = db
         self.map_selector = map_selector
         self.sql_query_processor = sql_query_processor
+        self.test_db = test_db
         
     def generate(self, question: str) -> StreamlitMap:
         # generate SQL query
@@ -38,7 +40,10 @@ class GPT4QuestionMapper(PromptMapper):
         
         self.logger.debug(f"SQL query with spatial columns added:\n{prettify_sql(prompt_sql_query)}")
         
-        # TODO #7 execute in test db
+        # execute in test db
+        self.logger.debug(f"Executing SQL query in test db...")
+        self.test_db.run_query(prompt_sql_query)
+        self.logger.debug(f"Query executed successfully in test db.")
         
         # execute in real db
         self.logger.debug(f"Executing SQL query...")
