@@ -1,7 +1,7 @@
 import re
 
-from interfaces.nlp.llm import LLM
-from interfaces.sql.prompt2sql import Prompt2SQL
+from prompt2map.interfaces.nlp.llm import LLM
+from prompt2map.interfaces.sql.prompt2sql import Prompt2SQL
 
 
 class LLMPrompt2SQL(Prompt2SQL):

@@ -1,15 +1,14 @@
-from email import generator
 from typing import Literal, Optional, Self
 import geopandas as gpd
 
-from application.generators.openai_map_generator import OpenAIMapGenerator
-from application.prompt2sql.sql_query_processor import SQLQueryProcessor
-from application.retrievers.sql_geo_retriever import SQLGeoRetriever
-from interfaces.core.geo_retriever import GeoRetriever
-from interfaces.core.map import Map
-from interfaces.core.map_generator import MapGenerator
-from providers.openai import OpenAIProvider
-from providers.postgres_db import PostgresDB
+from prompt2map.application.generators.openai_map_generator import OpenAIMapGenerator
+from prompt2map.application.prompt2sql.sql_query_processor import SQLQueryProcessor
+from prompt2map.application.retrievers.sql_geo_retriever import SQLGeoRetriever
+from prompt2map.interfaces.core.geo_retriever import GeoRetriever
+from prompt2map.interfaces.core.map import Map
+from prompt2map.interfaces.core.map_generator import MapGenerator
+from prompt2map.providers.openai import OpenAIProvider
+from prompt2map.providers.postgres_db import PostgresDB
 
 class Prompt2Map:
     def __init__(self, retriever: GeoRetriever, generator: MapGenerator) -> None:
@@ -36,4 +35,8 @@ class Prompt2Map:
         sql_retrievier = SQLGeoRetriever(db, sql_query_processor=query_processor)
         openai_generator = OpenAIMapGenerator(openai_provider)
         return cls(retriever=sql_retrievier, generator=openai_generator)
-    
+
+
+def generate_map(prompt: str, data_source: str | gpd.GeoDataFrame = None):
+    # TODO: main function to generate map from prompt
+    pass

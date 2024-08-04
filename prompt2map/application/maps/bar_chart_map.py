@@ -4,10 +4,9 @@ from matplotlib import pyplot as plt
 import pandas as pd
 from shapely import MultiPolygon, Polygon
 import geopandas as gpd
-from streamlit_folium import st_folium
 import plotly.express as px
 
-from interfaces.core.map import Map
+from prompt2map.interfaces.core.map import Map
 
 
 def average_bounding_boxes(s: gpd.GeoSeries) -> tuple[float, float]:
@@ -132,6 +131,3 @@ class BarChartMap(Map):
             
     def show(self) -> None:
         self.fig.show_in_browser()
-
-    def add_to_streamlit(self) -> None:
-        st_data = st_folium(self.fig)

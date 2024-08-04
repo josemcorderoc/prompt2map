@@ -1,13 +1,12 @@
 import logging
 from typing import Any, Callable, Optional
-from sqlglot import func
 import geopandas as gpd
 
-from application.maps.bar_chart_map import BarChartMap
-from application.maps.choropleth_map import ChoroplethMap
-from interfaces.core.map import Map
-from interfaces.core.map_generator import MapGenerator
-from providers.openai import OpenAIProvider
+from prompt2map.application.maps.bar_chart_map import BarChartMap
+from prompt2map.application.maps.choropleth_map import ChoroplethMap
+from prompt2map.interfaces.core.map import Map
+from prompt2map.interfaces.core.map_generator import MapGenerator
+from prompt2map.providers.openai import OpenAIProvider
 
 def get_available_tools(data: gpd.GeoDataFrame) -> list[dict[str, Any]]:
     return [

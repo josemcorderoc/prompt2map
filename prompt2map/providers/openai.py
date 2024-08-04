@@ -11,8 +11,8 @@ import openai
 from openai.types import Batch
 from openai import OpenAI
 
-from interfaces.nlp.embedding import Embedding
-from interfaces.nlp.llm import LLM
+from prompt2map.interfaces.nlp.embedding import Embedding
+from prompt2map.interfaces.nlp.llm import LLM
 
 T = TypeVar('T')
 

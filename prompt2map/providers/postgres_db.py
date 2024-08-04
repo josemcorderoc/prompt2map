@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, MetaData
 from sqlalchemy.sql import text
 import json
 
-from interfaces.sql.geo_database import GeoDatabase
+from prompt2map.interfaces.sql.geo_database import GeoDatabase
 
 class PostgresDB(GeoDatabase):
     def __init__(self, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432) -> None:
@@ -22,7 +22,7 @@ class PostgresDB(GeoDatabase):
         # self.conn = psycopg2.connect(dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port)
         self.create_connection()
         # Create an engine to be reused for database connections
-        self.engine = create_engine(f'postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}')
+        self.engine = create_engine(f'postgresql+psycopg://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}')
 
     def create_connection(self):
         return psycopg.connect(dbname=self.db_name, user=self.db_user, password=self.db_password, host=self.db_host, port=self.db_port)

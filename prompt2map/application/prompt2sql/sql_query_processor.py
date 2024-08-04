@@ -2,8 +2,8 @@ import logging
 from sqlglot import parse_one, exp
 import sqlparse
 
-from interfaces.nlp.embedding import Embedding
-from interfaces.sql.geo_database import GeoDatabase
+from prompt2map.interfaces.nlp.embedding import Embedding
+from prompt2map.interfaces.sql.geo_database import GeoDatabase
 
 # Function to remove a specific condition from the WHERE clause
 def remove_condition(parsed_query, column, value):

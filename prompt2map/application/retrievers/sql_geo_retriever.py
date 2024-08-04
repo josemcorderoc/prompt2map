@@ -2,13 +2,13 @@ import logging
 from typing import Optional
 import geopandas as gpd
 
-from application.prompt2sql.llm_prompt2sql import LLMPrompt2SQL
-from application.prompt2sql.sql_query_processor import SQLQueryProcessor
-from application.prompt2sql.utils import is_read_only_query, to_geospatial_query
-from interfaces.core.geo_retriever import GeoRetriever
-from interfaces.sql.geo_database import GeoDatabase
-from interfaces.sql.prompt2sql import Prompt2SQL
-from providers.openai import OpenAIProvider
+from prompt2map.application.prompt2sql.llm_prompt2sql import LLMPrompt2SQL
+from prompt2map.application.prompt2sql.sql_query_processor import SQLQueryProcessor
+from prompt2map.application.prompt2sql.utils import is_read_only_query, to_geospatial_query
+from prompt2map.interfaces.core.geo_retriever import GeoRetriever
+from prompt2map.interfaces.sql.geo_database import GeoDatabase
+from prompt2map.interfaces.sql.prompt2sql import Prompt2SQL
+from prompt2map.providers.openai import OpenAIProvider
 
 
 class SQLGeoRetriever(GeoRetriever):
