@@ -3,10 +3,11 @@ import folium
 from matplotlib import pyplot as plt
 import pandas as pd
 from shapely import MultiPolygon, Polygon
-from application.interfaces.streamlit_map import StreamlitMap
 import geopandas as gpd
 from streamlit_folium import st_folium
 import plotly.express as px
+
+from interfaces.core.map import Map
 
 
 def average_bounding_boxes(s: gpd.GeoSeries) -> tuple[float, float]:
@@ -97,7 +98,7 @@ def plot_polygons(polygons):
     ax.set_aspect('equal')
     plt.show()
     
-class BarChartMap(StreamlitMap):
+class BarChartMap(Map):
     def __init__(self, data: gpd.GeoDataFrame, value_columns: list[str], height=500, width=500, colors: Optional[list[str]] = None) -> None:
         self.data = data
         self.value_columns = value_columns

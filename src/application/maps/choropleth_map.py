@@ -1,10 +1,9 @@
 import geopandas as gpd
 from streamlit_folium import folium_static
 
-from application.interfaces.streamlit_map import StreamlitMap
+from interfaces.core.map import Map
 
-
-class ChoroplethMap(StreamlitMap):
+class ChoroplethMap(Map):
     def __init__(self, data: gpd.GeoDataFrame, value_column: str, cmap='viridis', legend_title='Legend', title='Choropleth Map', height=500, width=500) -> None:       
         self.data = data
         self.value_column = value_column
@@ -16,3 +15,6 @@ class ChoroplethMap(StreamlitMap):
     
     def add_to_streamlit(self) -> None:
         st_data = folium_static(self.fig)
+
+    def _repr_html_(self):
+        return self.fig._repr_html_()

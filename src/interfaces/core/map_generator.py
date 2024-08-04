@@ -1,0 +1,9 @@
+from typing import Optional, Protocol
+import geopandas as gpd
+
+from interfaces.core.map import Map
+
+
+class MapGenerator(Protocol):
+    def generate(self, prompt: str, data: gpd.GeoDataFrame) -> Optional[Map]:
+        ...
