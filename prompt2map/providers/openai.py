@@ -1,13 +1,9 @@
-from email import message
 import inspect
 import json
 import logging
-from pyexpat.errors import messages
 from typing import Any, Callable, Optional, TypeVar
-from click import Option
 import jsonlines
 import numpy as np
-import openai
 from openai.types import Batch
 from openai import OpenAI
 

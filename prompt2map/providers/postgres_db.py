@@ -1,12 +1,11 @@
 
-import re
 from typing import Any, Optional
 from geopandas.geodataframe import GeoDataFrame
 import geopandas as gpd
 import numpy as np
 import pandas as pd
 import psycopg
-from sqlalchemy import create_engine, MetaData
+from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 import json
 
