@@ -1,7 +1,7 @@
 from typing import Optional, Protocol
 import geopandas as gpd
 
-from prompt2map.interfaces.core.map import Map
+from prompt2map.types import Map
 
 
 class MapGenerator(Protocol):

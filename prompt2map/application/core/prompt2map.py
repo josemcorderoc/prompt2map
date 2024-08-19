@@ -5,10 +5,10 @@ from prompt2map.application.generators.openai_map_generator import OpenAIMapGene
 from prompt2map.application.prompt2sql.sql_query_processor import SQLQueryProcessor
 from prompt2map.application.retrievers.sql_geo_retriever import SQLGeoRetriever
 from prompt2map.interfaces.core.geo_retriever import GeoRetriever
-from prompt2map.interfaces.core.map import Map
 from prompt2map.interfaces.core.map_generator import MapGenerator
 from prompt2map.providers.openai import OpenAIProvider
 from prompt2map.providers.postgres_db import PostgresDB
+from prompt2map.types import Map
 
 class Prompt2Map:
     def __init__(self, retriever: GeoRetriever, generator: MapGenerator) -> None:
