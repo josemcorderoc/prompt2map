@@ -56,4 +56,5 @@ class SQLGeoRetriever(GeoRetriever):
         data = self.db.get_geodata(sql_query)
         self.logger.info(f"Query {sql_query} ran in production database.")
         
+        self.sql_query = sql_query
         return data
