@@ -26,12 +26,6 @@ class PostgresDB(GeoDatabase):
     def create_connection(self):
         return psycopg.connect(dbname=self.db_name, user=self.db_user, password=self.db_password, host=self.db_host, port=self.db_port)
         
-    def run_query(self, query: str) -> list[dict]:
-        with self.engine.connect() as connection:
-            
-            result = connection.execute(text(query))
-            rows = [dict(row) for row in result]
-        return rows
 
     def get_schema(self) -> str:
         with self.create_connection() as conn:
