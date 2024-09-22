@@ -48,8 +48,3 @@ class Prompt2Map:
         sql_retrievier = SQLGeoRetriever(db, prompt2sql=prompt2sql, sql_query_processor=query_processor)
         openai_generator = OpenAIMapGenerator(openai_provider)
         return cls(retriever=sql_retrievier, generator=openai_generator)
-
-
-def generate_map(prompt: str, data_source: str | gpd.GeoDataFrame = None):
-    # TODO: main function to generate map from prompt
-    pass
