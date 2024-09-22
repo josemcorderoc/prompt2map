@@ -129,4 +129,8 @@ class PostgresDB(GeoDatabase):
                     return result[0]
                 return None
 
+    def get_geo_column(self) -> tuple[str, str]:
+        raise NotImplementedError
+
+
        
