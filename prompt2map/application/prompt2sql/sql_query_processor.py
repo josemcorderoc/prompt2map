@@ -94,7 +94,10 @@ class SQLQueryProcessor:
         self.logger.info(f"Query literals: {query_literals}")
         for (table_name, column_name), literal in query_literals.items():
             col_type = self.db.get_column_type(table_name, column_name)
-            if col_type == "text":
+            if col_type is None:
+                self.logger.warning(f"Column {column_name} in table {table_name} does not exist.")
+                continue
+            elif col_type.lower() in ["text", "varchar"]:
                 text_embedding = self.embedding.get_embedding(str(literal)).tolist()
                 # most_similar_literal = self.db.get_most_similar_levenshtein(table_name, column_name, str(literal))
                 most_similar_literal = self.db.get_most_similar_cosine(table_name, column_name, text_embedding, "emb_openai_small")
