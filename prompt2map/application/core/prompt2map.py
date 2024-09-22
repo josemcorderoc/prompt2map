@@ -1,4 +1,5 @@
-from typing import Literal, Optional, Self
+from typing import Optional
+from typing_extensions import Self
 import geopandas as gpd
 
 from prompt2map.application.generators.openai_map_generator import OpenAIMapGenerator
