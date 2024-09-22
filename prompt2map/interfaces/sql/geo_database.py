@@ -23,3 +23,6 @@ class GeoDatabase(Protocol):
         
     def get_geo_column(self) -> tuple[str, str]:
         ...
+        
+    def get_geo_agg_function(self) -> str:
+        ...

@@ -37,8 +37,9 @@ def to_geospatial_query(query: str, geom_table: str, geom_col: str, agg_function
                             and e.table in table_alias 
                             and table_alias[e.table] != geom_table]
         if geom_table not in group_by_tables:
+            geom_col_name = geom_col
             if geom_table in table_alias.values() and table_alias.inv[geom_table] != "":
-                geom_col = f"{table_alias.inv[geom_table]}.{geom_col}"
-            select.expressions.append(f"{agg_function}({geom_col}) AS {geom_col}")
+                geom_col_name = f"{table_alias.inv[geom_table]}.{geom_col}"
+            select.expressions.append(f"{agg_function}({geom_col_name}) AS {geom_col}")
 
     return parsed_query.sql()

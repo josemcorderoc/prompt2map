@@ -29,8 +29,8 @@ class Prompt2Map:
         return self.map
 
     @classmethod
-    def from_postgis(cls, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432, provider: Literal["openai"] = "openai") -> Self:
-        db = PostgresDB(db_name, db_user, db_password, db_host, db_port)
+    def from_postgis(cls, geo_table: str, geo_column: str, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432) -> Self:
+        db = PostgresDB(geo_table, geo_column, db_name, db_user, db_password, db_host, db_port)
         openai_provider = OpenAIProvider()
         query_processor = SQLQueryProcessor(db, openai_provider)
         sql_retrievier = SQLGeoRetriever(db, sql_query_processor=query_processor)
