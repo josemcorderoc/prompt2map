@@ -2,7 +2,7 @@
 
 <!-- Provide a brief description of what your changes are about -->
 
-## What type of PR is this? (Check all applicable)
+## What type of PR is this?
   - [ ] 🍕 New feature
   - [ ] 🐛 Bug fix
   - [ ] 📝 Documentation update
