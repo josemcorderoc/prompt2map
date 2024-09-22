@@ -2,11 +2,11 @@ import logging
 from typing import Any, Callable, Optional
 import geopandas as gpd
 
+from prompt2map.application.maps.choropleth_map import choropleth_map
 from prompt2map.application.maps.bar_chart_map import BarChartMap
-from prompt2map.application.maps.choropleth_map import ChoroplethMap
-from prompt2map.interfaces.core.map import Map
 from prompt2map.interfaces.core.map_generator import MapGenerator
 from prompt2map.providers.openai import OpenAIProvider
+from prompt2map.types import Map
 
 def get_available_tools(data: gpd.GeoDataFrame) -> list[dict[str, Any]]:
     return [
@@ -60,7 +60,7 @@ def get_available_tools(data: gpd.GeoDataFrame) -> list[dict[str, Any]]:
 
 def create_choropleth_map(data: gpd.GeoDataFrame, title: str, value_column: str) -> Map:
     # TODO check if any processing is needed
-    return ChoroplethMap(data=data, title=title, value_column=value_column)
+    return choropleth_map(data, value_column, title, "folium")
 
 def create_bar_chart_map(data: gpd.GeoDataFrame, value_columns: list[str]) -> Map:
     return BarChartMap(data=data, value_columns=value_columns)
