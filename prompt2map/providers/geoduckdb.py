@@ -7,11 +7,13 @@ import pandas as pd
 from prompt2map.interfaces.sql.geo_database import GeoDatabase
 
 class GeoDuckDB(GeoDatabase):
-    def __init__(self, table_name: str, file_path: str, embeddings_path: str, descriptions_path: str) -> None:
+    def __init__(self, table_name: str, file_path: str, embeddings_path: str, descriptions_path: str, 
+                 geo_agg_function: str = "ST_Union_Agg") -> None:
         self.table_name = table_name
         self.file_path = file_path
         self.embeddings_path = embeddings_path
         self.descriptions_path = descriptions_path
+        self.geo_agg_function = geo_agg_function
         
         self.embeddings_table_name = "embeddings"
         self.descriptions_table_name = "descriptions"
@@ -105,4 +107,8 @@ class GeoDuckDB(GeoDatabase):
 
     def get_geo_column(self) -> tuple[str, str]:
         return self.table_name, self.geometry_column
+
+    def get_geo_agg_function(self) -> str:
+        return self.geo_agg_function
+
 

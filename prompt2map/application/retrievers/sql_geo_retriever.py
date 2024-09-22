@@ -14,8 +14,7 @@ from prompt2map.providers.openai import OpenAIProvider
 class SQLGeoRetriever(GeoRetriever):
     def __init__(self, db: GeoDatabase, prompt2sql: Optional[Prompt2SQL] = None,
                  sql_query_processor: Optional[SQLQueryProcessor] = None,
-                 test_db: Optional[GeoDatabase] = None, db_schema: Optional[str] = None,
-                 agg_function_sql: str = "ST_Union_Agg") -> None:
+                 test_db: Optional[GeoDatabase] = None, db_schema: Optional[str] = None) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.db = db
         self.test_db = test_db
@@ -25,7 +24,6 @@ class SQLGeoRetriever(GeoRetriever):
             self.db_schema = db_schema if db_schema else self.db.get_schema()
             prompt2sql = LLMPrompt2SQL(self.openai_provider, self.db_schema)
         self.prompt2sql = prompt2sql
-        self.agg_function_sql = agg_function_sql
         
     
 
@@ -46,7 +44,7 @@ class SQLGeoRetriever(GeoRetriever):
         
         # add spatial columns
         geotable_name, geocolumn_name = self.db.get_geo_column()
-        sql_query = to_geospatial_query(sql_query, geotable_name, geocolumn_name, self.agg_function_sql)
+        sql_query = to_geospatial_query(sql_query, geotable_name, geocolumn_name, self.db.get_geo_agg_function())
         self.logger.info(f"Added spatial columns to query. New query:\n{sql_query}")
         
 
