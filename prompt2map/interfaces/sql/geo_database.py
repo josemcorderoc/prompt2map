@@ -20,3 +20,6 @@ class GeoDatabase(Protocol):
 
     def get_column_type(self, table_name: str, column_name: str) -> Optional[str]:
         ...
+        
+    def get_geo_column(self) -> tuple[str, str]:
+        ...
