@@ -4,7 +4,6 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prompt2map"
-# version = "0.0.1"
 description = "Dynamic maps generation based on natural language prompts using Retrieval-Augmented Generation (RAG)"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,3 +26,5 @@ Homepage = "https://github.com/josemcorderoc/prompt2map"
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "examples"]
+
+[tool.setuptools_scm]
