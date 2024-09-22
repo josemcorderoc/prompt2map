@@ -3,9 +3,6 @@ from typing import Any, Optional, Protocol
 import geopandas as gpd
 
 class GeoDatabase(Protocol):
-    def run_query(self, query: str) -> list[dict]:
-        ...
-        
     def get_schema(self) -> str:
         ...
     
@@ -22,4 +19,7 @@ class GeoDatabase(Protocol):
         ...
 
     def get_column_type(self, table_name: str, column_name: str) -> Optional[str]:
+        ...
+        
+    def get_geo_column(self) -> tuple[str, str]:
         ...

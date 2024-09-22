@@ -6,7 +6,7 @@ from shapely import MultiPolygon, Polygon
 import geopandas as gpd
 import plotly.express as px
 
-from prompt2map.interfaces.core.map import Map
+from prompt2map.types import Map
 
 
 def average_bounding_boxes(s: gpd.GeoSeries) -> tuple[float, float]:
@@ -97,7 +97,7 @@ def plot_polygons(polygons):
     ax.set_aspect('equal')
     plt.show()
     
-class BarChartMap(Map):
+class BarChartMap:
     def __init__(self, data: gpd.GeoDataFrame, value_columns: list[str], height=500, width=500, colors: Optional[list[str]] = None) -> None:
         self.data = data
         self.value_columns = value_columns

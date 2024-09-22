@@ -115,7 +115,7 @@ class OpenAIProvider(LLM, Embedding):
     
     
     def send_batch_embedding(self, requests, input_file_name: str) -> str:
-        # Write the requests to a jsonl file7
+        # Write the requests to a jsonl file
         with jsonlines.open(input_file_name, mode='w') as writer:
             writer.write_all(requests)
         
