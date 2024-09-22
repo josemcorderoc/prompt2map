@@ -21,6 +21,13 @@ dynamic = ["dependencies", "version"]
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
 
+[project.optional-dependencies]
+test = [
+    "pytest==8.3.3",
+    "pytest-mock==3.14.0",
+    "flake8==7.1.0"
+]
+
 [project.urls]
 Homepage = "https://github.com/josemcorderoc/prompt2map"
 
