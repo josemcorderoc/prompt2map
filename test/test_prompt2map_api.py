@@ -1,3 +1,4 @@
+import os
 from typing import Optional
 
 import geopandas as gpd
@@ -6,6 +7,7 @@ import pytest
 from shapely.geometry import Point
 
 from prompt2map.application.core.prompt2map import Prompt2Map
+from prompt2map.providers.openai import OpenAIProvider
 from prompt2map.types import Map
 
 
@@ -53,16 +55,14 @@ def variable_descriptions_csv(tmp_path):
     descriptions.to_csv(tmp_path / "variable_descriptions.csv", index=False)
     return tmp_path / "variable_descriptions.csv"
 
-def dummy_generate_map(prompt: str, data: gpd.GeoDataFrame) -> Optional[Map]:
+def dummy_generate_map(self, prompt: str, data: gpd.GeoDataFrame) -> Optional[Map]:
     return data.explore()
     
 
 def test_prompt2map_from_file(mocker, geodata_parquet, embeddings_parquet, variable_descriptions_csv):
     # mocks
-    mock_openai_map_generator = mocker.patch('prompt2map.application.generators.openai_map_generator.OpenAIMapGenerator')
-    mock_openai_map_generator_instance = mock_openai_map_generator.return_value
-    mock_openai_map_generator_instance.generate.return_value = None  # Here I want my own dummy implementation
-    mock_openai_map_generator_instance.generate.side_effect = dummy_generate_map
+    mocker.patch('prompt2map.application.generators.openai_map_generator.OpenAIMapGenerator.generate', dummy_generate_map)
+    mocker.patch.object(OpenAIProvider, "__init__", lambda x: None)
     
     geodf = gpd.read_parquet(geodata_parquet)
     mocker.patch('prompt2map.application.retrievers.sql_geo_retriever.SQLGeoRetriever.retrieve', return_value=geodf)
