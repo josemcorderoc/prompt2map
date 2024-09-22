@@ -2,32 +2,22 @@ import logging
 from typing import Optional
 import geopandas as gpd
 
-from prompt2map.application.prompt2sql.llm_prompt2sql import LLMPrompt2SQL
 from prompt2map.application.prompt2sql.sql_query_processor import SQLQueryProcessor
 from prompt2map.application.prompt2sql.utils import is_read_only_query, to_geospatial_query
 from prompt2map.interfaces.core.geo_retriever import GeoRetriever
 from prompt2map.interfaces.sql.geo_database import GeoDatabase
 from prompt2map.interfaces.sql.prompt2sql import Prompt2SQL
-from prompt2map.providers.openai import OpenAIProvider
 
 
 class SQLGeoRetriever(GeoRetriever):
-    def __init__(self, db: GeoDatabase, prompt2sql: Optional[Prompt2SQL] = None,
+    def __init__(self, db: GeoDatabase, prompt2sql: Prompt2SQL,
                  sql_query_processor: Optional[SQLQueryProcessor] = None,
-                 test_db: Optional[GeoDatabase] = None, db_schema: Optional[str] = None,
-                 agg_function_sql: str = "ST_Union_Agg") -> None:
+                 test_db: Optional[GeoDatabase] = None) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.db = db
         self.test_db = test_db
         self.sql_query_processor = sql_query_processor
-        if prompt2sql is None:
-            self.openai_provider = OpenAIProvider()
-            self.db_schema = db_schema if db_schema else self.db.get_schema()
-            prompt2sql = LLMPrompt2SQL(self.openai_provider, self.db_schema)
         self.prompt2sql = prompt2sql
-        self.agg_function_sql = agg_function_sql
-        
-    
 
     def retrieve(self, query: str) -> gpd.GeoDataFrame:
         # generate sql query
@@ -46,7 +36,7 @@ class SQLGeoRetriever(GeoRetriever):
         
         # add spatial columns
         geotable_name, geocolumn_name = self.db.get_geo_column()
-        sql_query = to_geospatial_query(sql_query, geotable_name, geocolumn_name, self.agg_function_sql)
+        sql_query = to_geospatial_query(sql_query, geotable_name, geocolumn_name, self.db.get_geo_agg_function())
         self.logger.info(f"Added spatial columns to query. New query:\n{sql_query}")
         
 

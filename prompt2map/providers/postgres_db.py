@@ -12,12 +12,17 @@ import json
 from prompt2map.interfaces.sql.geo_database import GeoDatabase
 
 class PostgresDB(GeoDatabase):
-    def __init__(self, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432) -> None:
+    def __init__(self, geo_table: str, geo_column: str, db_name: str, db_user: str, 
+                 db_password: str, db_host: str = "localhost", db_port: int = 5432,
+                 geo_agg_function: str = "ST_Union") -> None:
+        self.geo_table = geo_table
+        self.geo_column = geo_column
         self.db_name = db_name
         self.db_user = db_user
         self.db_password = db_password
         self.db_host = db_host
         self.db_port = db_port
+        self.geo_agg_function = geo_agg_function
         # self.conn = psycopg2.connect(dbname=db_name, user=db_user, password=db_password, host=db_host, port=db_port)
         self.create_connection()
         # Create an engine to be reused for database connections
@@ -130,7 +135,11 @@ class PostgresDB(GeoDatabase):
                 return None
 
     def get_geo_column(self) -> tuple[str, str]:
-        raise NotImplementedError
+        return self.geo_table, self.geo_column
+
+    def get_geo_agg_function(self) -> str:
+        return self.geo_agg_function
+
 
 
        

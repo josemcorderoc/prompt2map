@@ -1,7 +1,9 @@
-from typing import Literal, Optional, Self
+from typing import Optional
+from typing_extensions import Self
 import geopandas as gpd
 
 from prompt2map.application.generators.openai_map_generator import OpenAIMapGenerator
+from prompt2map.application.prompt2sql.llm_prompt2sql import LLMPrompt2SQL
 from prompt2map.application.prompt2sql.sql_query_processor import SQLQueryProcessor
 from prompt2map.application.retrievers.sql_geo_retriever import SQLGeoRetriever
 from prompt2map.interfaces.core.geo_retriever import GeoRetriever
@@ -29,11 +31,12 @@ class Prompt2Map:
         return self.map
 
     @classmethod
-    def from_postgis(cls, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432, provider: Literal["openai"] = "openai") -> Self:
-        db = PostgresDB(db_name, db_user, db_password, db_host, db_port)
+    def from_postgis(cls, geo_table: str, geo_column: str, db_name: str, db_user: str, db_password: str, db_host: str = "localhost", db_port: int = 5432) -> Self:
+        db = PostgresDB(geo_table, geo_column, db_name, db_user, db_password, db_host, db_port)
         openai_provider = OpenAIProvider()
         query_processor = SQLQueryProcessor(db, openai_provider)
-        sql_retrievier = SQLGeoRetriever(db, sql_query_processor=query_processor)
+        prompt2sql = LLMPrompt2SQL(openai_provider, db.get_schema())
+        sql_retrievier = SQLGeoRetriever(db, prompt2sql=prompt2sql, sql_query_processor=query_processor)
         openai_generator = OpenAIMapGenerator(openai_provider)
         return cls(retriever=sql_retrievier, generator=openai_generator)
     
@@ -42,11 +45,7 @@ class Prompt2Map:
         db = GeoDuckDB(table_name, file_path, embeddings_path, descriptions_path)
         openai_provider = OpenAIProvider()
         query_processor = SQLQueryProcessor(db, openai_provider)
-        sql_retrievier = SQLGeoRetriever(db, sql_query_processor=query_processor)
+        prompt2sql = LLMPrompt2SQL(openai_provider, db.get_schema())
+        sql_retrievier = SQLGeoRetriever(db, prompt2sql=prompt2sql, sql_query_processor=query_processor)
         openai_generator = OpenAIMapGenerator(openai_provider)
         return cls(retriever=sql_retrievier, generator=openai_generator)
-
-
-def generate_map(prompt: str, data_source: str | gpd.GeoDataFrame = None):
-    # TODO: main function to generate map from prompt
-    pass
