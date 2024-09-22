@@ -34,13 +34,13 @@ class SQLGeoRetriever(GeoRetriever):
         
         # validate read only
         if not is_read_only_query(sql_query):
-            raise ValueError(f"Query {sql_query} is not a read-only query.")
-        self.logger.info(f"Query {sql_query} is a read-only query.")
+            raise ValueError(f"Query is not a read-only query.")
+        self.logger.info(f"Query is a read-only query.")
         
         # replace literals
         if self.sql_query_processor:
             sql_query = self.sql_query_processor.replace_literals(sql_query)
-        self.logger.info(f"Replaced literals in query. New query:\n{sql_query}")
+            self.logger.info(f"Replaced literals in query. New query:\n{sql_query}")
         
         # add spatial columns
         sql_query = to_geospatial_query(sql_query, {"comuna": "geom"})
@@ -50,7 +50,7 @@ class SQLGeoRetriever(GeoRetriever):
         # run in test database
         if self.test_db:
             self.test_db.get_geodata(sql_query)
-        self.logger.info(f"Query {sql_query} ran in test database.")
+            self.logger.info(f"Query {sql_query} ran in test database.")
         
         # run in production environment
         data = self.db.get_geodata(sql_query)
