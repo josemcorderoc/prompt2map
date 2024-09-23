@@ -1,44 +1,62 @@
 
+import json
 import logging
-from typing import Any
+import os
+from typing import Any, Optional
 import duckdb
 import geopandas as gpd
 import pandas as pd
+from pyproj import CRS
 from prompt2map.interfaces.sql.geo_database import GeoDatabase
-
+import pyarrow.parquet as pq
 class GeoDuckDB(GeoDatabase):
     def __init__(self, table_name: str, file_path: str, embeddings_path: str, descriptions_path: str, 
-                 geo_agg_function: str = "ST_Union_Agg") -> None:
+                 geo_agg_function: str = "ST_Union_Agg", crs: Optional[str|CRS] = None) -> None:
         self.table_name = table_name
         self.file_path = file_path
         self.embeddings_path = embeddings_path
         self.descriptions_path = descriptions_path
         self.geo_agg_function = geo_agg_function
-        
+        self.crs = crs
         self.embeddings_table_name = "embeddings"
         self.descriptions_table_name = "descriptions"
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.connection = duckdb.connect()
         
         self.connection.install_extension("spatial")
+        self.connection.install_extension("httpfs")
+        self.connection.load_extension("httpfs")
         self.connection.load_extension("spatial")
+        
+        access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+        secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+        
+        if access_key and secret_key:
+            self.connection.execute(f"""
+                                CREATE SECRET secret1 (
+                                    TYPE S3,
+                                    KEY_ID '{access_key}',
+                                    SECRET '{secret_key}',
+                                    REGION 'us-east-2'
+                                );""")
         
         self.connection.execute(f"CREATE TABLE {self.table_name} AS SELECT * FROM '{self.file_path}'")
         self.connection.execute(f"CREATE TABLE {self.embeddings_table_name} AS SELECT * FROM '{self.embeddings_path}'")
         self.connection.execute(f"CREATE TABLE {self.descriptions_table_name} AS SELECT * FROM '{self.descriptions_path}'")
         
         # validate that the main table has a geometry column
-        metadata = self.get_fields_metadata(self.table_name)
-        
-        geometry_columns = metadata[metadata["type"] == "GEOMETRY"]["name"].to_list()
+        geometry_columns = self.connection.sql(
+            f"SELECT name FROM pragma_table_info('{table_name}') WHERE type = 'GEOMETRY';" 
+        ).fetchall()
         
         if len(geometry_columns) == 0:
             raise ValueError(f"No geometry columns found in table {self.table_name}")
         elif len(geometry_columns) > 1:
             raise ValueError(f"Multiple geometry columns found in table {self.table_name}")
         
-        self.geometry_column = geometry_columns[0]
-        self.crs = gpd.read_parquet(self.file_path).crs
+        self.geometry_column = geometry_columns[0][0]
+        if self.crs is None:
+            self.crs = self.get_crs()
         
         self.embedding_length = self.connection.sql(f"""SELECT len(values)
                             FROM {self.embeddings_table_name}
@@ -46,11 +64,41 @@ class GeoDuckDB(GeoDatabase):
         
         self.embedding_type = f"DOUBLE[{self.embedding_length}]"
         
-    def get_fields_metadata(self, table_name) -> pd.DataFrame:
-        return self.connection.sql(
-            f"SELECT * FROM pragma_table_info('{table_name}')" 
-        ).df()
     
+    def get_crs(self) -> Any:
+        # via DuckDB
+        crs = self.connection.execute("""
+                SELECT
+                    FORMAT(
+                        '{}:{}',
+                        layers[1].geometry_fields[1].crs.auth_name,
+                        layers[1].geometry_fields[1].crs.auth_code
+                    ) AS crs""" + f"""
+                FROM st_read_meta('{self.file_path}')    
+                """).fetchall()
+        if len(crs) > 0:
+            self.logger.info(f"CRS found in DuckDB")
+            return crs[0][0]
+        
+        # via Parquet metadata
+        parquet_data = pq.ParquetFile(self.file_path)
+        metadata = parquet_data.schema_arrow.metadata
+        try:
+            geo = json.loads(metadata[b'geo'])
+            crs_id = geo["columns"]["geometry"]["crs"]["id"]
+            authority, code = crs_id["authority"], crs_id["code"]
+            epsg_code = f"{authority}:{code}"
+            self.logger.info(f"CRS found in Parquet file metadata")
+            return epsg_code
+        except KeyError:
+            self.logger.info("No CRS found in Parquet file metadata")
+            
+        # via GeoPandas
+        crs = gpd.read_parquet(self.file_path)
+        if crs is not None:
+            self.logger.info(f"CRS found in Parquet file (GeoPandas)")
+            return crs
+        return crs.crs
     
     def get_schema(self) -> str:
         variables_block = self.connection.sql("""
@@ -99,11 +147,12 @@ class GeoDuckDB(GeoDatabase):
         raise NotImplementedError
 
     def get_column_type(self, table_name: str, column_name: str) -> str | None:
-        df = self.get_fields_metadata(table_name)
-        df = df[df.name == column_name]
-        if len(df) == 0:
+        field = self.connection.sql(
+            f"SELECT type FROM pragma_table_info('{table_name}') WHERE name = '{column_name}' LIMIT 1;" 
+        ).fetchall()
+        if len(field) == 0:
             return None
-        return df.iloc[0]["type"]
+        return field[0][0]
 
     def get_geo_column(self) -> tuple[str, str]:
         return self.table_name, self.geometry_column
