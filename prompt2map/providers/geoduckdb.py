@@ -43,16 +43,16 @@ class GeoDuckDB(GeoDatabase):
         self.connection.execute(f"CREATE TABLE {self.descriptions_table_name} AS SELECT * FROM '{self.descriptions_path}'")
         
         # validate that the main table has a geometry column
-        metadata = self.get_fields_metadata(self.table_name)
-        
-        geometry_columns = metadata[metadata["type"] == "GEOMETRY"]["name"].to_list()
+        geometry_columns = self.connection.sql(
+            f"SELECT name FROM pragma_table_info('{table_name}') WHERE type = 'GEOMETRY';" 
+        ).fetchall()
         
         if len(geometry_columns) == 0:
             raise ValueError(f"No geometry columns found in table {self.table_name}")
         elif len(geometry_columns) > 1:
             raise ValueError(f"Multiple geometry columns found in table {self.table_name}")
         
-        self.geometry_column = geometry_columns[0]
+        self.geometry_column = geometry_columns[0][0]
         self.crs = gpd.read_parquet(self.file_path).crs
         
         self.embedding_length = self.connection.sql(f"""SELECT len(values)
@@ -61,10 +61,6 @@ class GeoDuckDB(GeoDatabase):
         
         self.embedding_type = f"DOUBLE[{self.embedding_length}]"
         
-    def get_fields_metadata(self, table_name) -> pd.DataFrame:
-        return self.connection.sql(
-            f"SELECT * FROM pragma_table_info('{table_name}')" 
-        ).df()
     
     
     def get_schema(self) -> str:
@@ -114,11 +110,12 @@ class GeoDuckDB(GeoDatabase):
         raise NotImplementedError
 
     def get_column_type(self, table_name: str, column_name: str) -> str | None:
-        df = self.get_fields_metadata(table_name)
-        df = df[df.name == column_name]
-        if len(df) == 0:
+        field = self.connection.sql(
+            f"SELECT type FROM pragma_table_info('{table_name}') WHERE name = '{column_name}' LIMIT 1;" 
+        ).fetchall()
+        if len(field) == 0:
             return None
-        return df.iloc[0]["type"]
+        return field[0][0]
 
     def get_geo_column(self) -> tuple[str, str]:
         return self.table_name, self.geometry_column
