@@ -1,5 +1,6 @@
 
 import logging
+import os
 from typing import Any
 import duckdb
 import geopandas as gpd
@@ -21,7 +22,21 @@ class GeoDuckDB(GeoDatabase):
         self.connection = duckdb.connect()
         
         self.connection.install_extension("spatial")
+        self.connection.install_extension("httpfs")
+        self.connection.load_extension("httpfs")
         self.connection.load_extension("spatial")
+        
+        access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+        secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+        
+        if access_key and secret_key:
+            self.connection.execute(f"""
+                                CREATE SECRET secret1 (
+                                    TYPE S3,
+                                    KEY_ID '{access_key}',
+                                    SECRET '{secret_key}',
+                                    REGION 'us-east-2'
+                                );""")
         
         self.connection.execute(f"CREATE TABLE {self.table_name} AS SELECT * FROM '{self.file_path}'")
         self.connection.execute(f"CREATE TABLE {self.embeddings_table_name} AS SELECT * FROM '{self.embeddings_path}'")
