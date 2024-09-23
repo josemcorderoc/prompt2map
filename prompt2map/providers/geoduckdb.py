@@ -81,7 +81,7 @@ class GeoDuckDB(GeoDatabase):
             return crs[0][0]
         
         # via Parquet metadata
-        parquet_data = pq.ParquetFile("s3://prompt2map/data/prod/geodata.parquet")
+        parquet_data = pq.ParquetFile(self.file_path)
         metadata = parquet_data.schema_arrow.metadata
         try:
             geo = json.loads(metadata[b'geo'])
