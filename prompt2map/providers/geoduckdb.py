@@ -18,7 +18,7 @@ class GeoDuckDB(GeoDatabase):
         
         self.embeddings_table_name = "embeddings"
         self.descriptions_table_name = "descriptions"
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(self.__class__.__name__)
         self.connection = duckdb.connect()
         
         self.connection.install_extension("spatial")
