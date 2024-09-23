@@ -1,5 +1,6 @@
 
 import logging
+import os
 from typing import Any
 import duckdb
 import geopandas as gpd
@@ -21,23 +22,37 @@ class GeoDuckDB(GeoDatabase):
         self.connection = duckdb.connect()
         
         self.connection.install_extension("spatial")
+        self.connection.install_extension("httpfs")
+        self.connection.load_extension("httpfs")
         self.connection.load_extension("spatial")
+        
+        access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+        secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+        
+        if access_key and secret_key:
+            self.connection.execute(f"""
+                                CREATE SECRET secret1 (
+                                    TYPE S3,
+                                    KEY_ID '{access_key}',
+                                    SECRET '{secret_key}',
+                                    REGION 'us-east-2'
+                                );""")
         
         self.connection.execute(f"CREATE TABLE {self.table_name} AS SELECT * FROM '{self.file_path}'")
         self.connection.execute(f"CREATE TABLE {self.embeddings_table_name} AS SELECT * FROM '{self.embeddings_path}'")
         self.connection.execute(f"CREATE TABLE {self.descriptions_table_name} AS SELECT * FROM '{self.descriptions_path}'")
         
         # validate that the main table has a geometry column
-        metadata = self.get_fields_metadata(self.table_name)
-        
-        geometry_columns = metadata[metadata["type"] == "GEOMETRY"]["name"].to_list()
+        geometry_columns = self.connection.sql(
+            f"SELECT name FROM pragma_table_info('{table_name}') WHERE type = 'GEOMETRY';" 
+        ).fetchall()
         
         if len(geometry_columns) == 0:
             raise ValueError(f"No geometry columns found in table {self.table_name}")
         elif len(geometry_columns) > 1:
             raise ValueError(f"Multiple geometry columns found in table {self.table_name}")
         
-        self.geometry_column = geometry_columns[0]
+        self.geometry_column = geometry_columns[0][0]
         self.crs = gpd.read_parquet(self.file_path).crs
         
         self.embedding_length = self.connection.sql(f"""SELECT len(values)
@@ -46,10 +61,6 @@ class GeoDuckDB(GeoDatabase):
         
         self.embedding_type = f"DOUBLE[{self.embedding_length}]"
         
-    def get_fields_metadata(self, table_name) -> pd.DataFrame:
-        return self.connection.sql(
-            f"SELECT * FROM pragma_table_info('{table_name}')" 
-        ).df()
     
     
     def get_schema(self) -> str:
@@ -99,11 +110,12 @@ class GeoDuckDB(GeoDatabase):
         raise NotImplementedError
 
     def get_column_type(self, table_name: str, column_name: str) -> str | None:
-        df = self.get_fields_metadata(table_name)
-        df = df[df.name == column_name]
-        if len(df) == 0:
+        field = self.connection.sql(
+            f"SELECT type FROM pragma_table_info('{table_name}') WHERE name = '{column_name}' LIMIT 1;" 
+        ).fetchall()
+        if len(field) == 0:
             return None
-        return df.iloc[0]["type"]
+        return field[0][0]
 
     def get_geo_column(self) -> tuple[str, str]:
         return self.table_name, self.geometry_column
