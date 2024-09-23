@@ -1,21 +1,23 @@
 
+import json
 import logging
 import os
-from typing import Any
+from typing import Any, Optional
 import duckdb
 import geopandas as gpd
 import pandas as pd
+from pyproj import CRS
 from prompt2map.interfaces.sql.geo_database import GeoDatabase
-
+import pyarrow.parquet as pq
 class GeoDuckDB(GeoDatabase):
     def __init__(self, table_name: str, file_path: str, embeddings_path: str, descriptions_path: str, 
-                 geo_agg_function: str = "ST_Union_Agg") -> None:
+                 geo_agg_function: str = "ST_Union_Agg", crs: Optional[str|CRS] = None) -> None:
         self.table_name = table_name
         self.file_path = file_path
         self.embeddings_path = embeddings_path
         self.descriptions_path = descriptions_path
         self.geo_agg_function = geo_agg_function
-        
+        self.crs = crs
         self.embeddings_table_name = "embeddings"
         self.descriptions_table_name = "descriptions"
         self.logger = logging.getLogger(self.__class__.__name__)
@@ -53,7 +55,8 @@ class GeoDuckDB(GeoDatabase):
             raise ValueError(f"Multiple geometry columns found in table {self.table_name}")
         
         self.geometry_column = geometry_columns[0][0]
-        self.crs = gpd.read_parquet(self.file_path).crs
+        if self.crs is None:
+            self.crs = self.get_crs()
         
         self.embedding_length = self.connection.sql(f"""SELECT len(values)
                             FROM {self.embeddings_table_name}
@@ -62,6 +65,40 @@ class GeoDuckDB(GeoDatabase):
         self.embedding_type = f"DOUBLE[{self.embedding_length}]"
         
     
+    def get_crs(self) -> Any:
+        # via DuckDB
+        crs = self.connection.execute("""
+                SELECT
+                    FORMAT(
+                        '{}:{}',
+                        layers[1].geometry_fields[1].crs.auth_name,
+                        layers[1].geometry_fields[1].crs.auth_code
+                    ) AS crs""" + f"""
+                FROM st_read_meta('{self.file_path}')    
+                """).fetchall()
+        if len(crs) > 0:
+            self.logger.info(f"CRS found in DuckDB")
+            return crs[0][0]
+        
+        # via Parquet metadata
+        parquet_data = pq.ParquetFile("s3://prompt2map/data/prod/geodata.parquet")
+        metadata = parquet_data.schema_arrow.metadata
+        try:
+            geo = json.loads(metadata[b'geo'])
+            crs_id = geo["columns"]["geometry"]["crs"]["id"]
+            authority, code = crs_id["authority"], crs_id["code"]
+            epsg_code = f"{authority}:{code}"
+            self.logger.info(f"CRS found in Parquet file metadata")
+            return epsg_code
+        except KeyError:
+            self.logger.info("No CRS found in Parquet file metadata")
+            
+        # via GeoPandas
+        crs = gpd.read_parquet(self.file_path)
+        if crs is not None:
+            self.logger.info(f"CRS found in Parquet file (GeoPandas)")
+            return crs
+        return crs.crs
     
     def get_schema(self) -> str:
         variables_block = self.connection.sql("""
