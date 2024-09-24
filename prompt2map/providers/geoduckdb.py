@@ -66,8 +66,22 @@ class GeoDuckDB(GeoDatabase):
         
     
     def get_crs(self) -> Any:
-        # via DuckDB
-        crs = self.connection.execute("""
+        # via DuckDB (parquet_kv_metadata)
+        crs = self.connection.sql("""
+            SELECT FORMAT(
+                '{}:{}',
+                json(decode(value)) ->> '$.columns.geometry.crs.id.authority',
+                json(decode(value)) ->> '$.columns.geometry.crs.id.code'
+            ) AS crs """
+            f"""FROM parquet_kv_metadata('{self.file_path}')
+            WHERE key = 'geo'
+            LIMIT 1;""")
+        if len(crs) > 0:
+            self.logger.info(f"CRS found in DuckDB (parquet_kv_metadata)")
+            return crs.fetchall()[0][0]
+        
+        # via DuckDB (st_read_meta)
+        crs = self.connection.sql("""
                 SELECT
                     FORMAT(
                         '{}:{}',
@@ -75,10 +89,10 @@ class GeoDuckDB(GeoDatabase):
                         layers[1].geometry_fields[1].crs.auth_code
                     ) AS crs""" + f"""
                 FROM st_read_meta('{self.file_path}')    
-                """).fetchall()
+                """)
         if len(crs) > 0:
-            self.logger.info(f"CRS found in DuckDB")
-            return crs[0][0]
+            self.logger.info(f"CRS found in DuckDB (st_read_meta)")
+            return crs.fetchall()[0][0]
         
         # via Parquet metadata
         parquet_data = pq.ParquetFile(self.file_path)
@@ -159,5 +173,10 @@ class GeoDuckDB(GeoDatabase):
 
     def get_geo_agg_function(self) -> str:
         return self.geo_agg_function
+
+    def value_in_column(self, table: str, column: str, value: str) -> bool:
+        result = self.connection.sql(f"SELECT 1 FROM {table} WHERE {column} = ? LIMIT 1;", params=[value])
+        return len(result) > 0
+
 
 

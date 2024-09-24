@@ -40,7 +40,7 @@ class SQLQueryProcessor:
         self.db = db
         self.embedding = embedding
     
-    def get_literals(self, parsed_query: exp.Expression) -> dict[tuple[str, str], exp.Literal]:
+    def get_sql_literals(self, parsed_query: exp.Expression) -> dict[tuple[str, str], exp.Literal]:
         # parsed_query = parse_one(query)
         table_alias = {t.alias:t.name for t in parsed_query.find_all(exp.Table)}
         
@@ -50,7 +50,7 @@ class SQLQueryProcessor:
         
         where = parsed_query.find(exp.Where)
         if where is None:
-            raise ValueError(f"Query {parsed_query.sql()} does not contain a WHERE clause.")
+            return {}
         
         literals: dict[tuple[str, str], exp.Literal] = {}
         for eq in where.find_all(exp.EQ):
@@ -86,7 +86,7 @@ class SQLQueryProcessor:
             str: SQL query with literals replaced
         """
         parsed_query = parse_one(query)
-        query_literals = self.get_literals(parsed_query)
+        query_literals = self.get_sql_literals(parsed_query)
         if len(query_literals) == 0:
             self.logger.warning(f"Query {query} does not contain any literals.")
             return query
@@ -97,15 +97,22 @@ class SQLQueryProcessor:
             if col_type is None:
                 self.logger.warning(f"Column {column_name} in table {table_name} does not exist.")
                 continue
-            elif col_type.lower() in ["text", "varchar"]:
-                text_embedding = self.embedding.get_embedding(str(literal)).tolist()
-                # most_similar_literal = self.db.get_most_similar_levenshtein(table_name, column_name, str(literal))
-                most_similar_literal = self.db.get_most_similar_cosine(table_name, column_name, text_embedding, "emb_openai_small")
-                most_similar_literal = f"'{most_similar_literal}'"
-                self.logger.info(f"Replacing literal {literal} with {most_similar_literal} (most similar).")
-                literal.replace(most_similar_literal)
-            else:
-                self.logger.info(f"Column {column_name} in table {table_name} is not of type text. Type: {col_type}")
+            elif col_type.lower() not in ["text", "varchar"]:
+                self.logger.warning(f"Literal {literal} in column {column_name} in table {table_name} is not a string.")
+                continue
+            
+            literal_contained = self.db.value_in_column(table_name, column_name, str(literal))
+            if literal_contained:
+                self.logger.info(f"Literal {literal} is already in column {column_name} in table {table_name}.")
+                continue
+            
+            # Replace the literal with the most similar literal
+            text_embedding = self.embedding.get_embedding(str(literal)).tolist()
+            most_similar_literal = self.db.get_most_similar_cosine(table_name, column_name, text_embedding, "emb_openai_small")
+            most_similar_literal = f"'{most_similar_literal}'"
+            self.logger.info(f"Replacing literal {literal} with {most_similar_literal} (most similar).")
+            literal.replace(most_similar_literal)
+                
             
         return parsed_query.sql()
 

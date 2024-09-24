@@ -20,7 +20,7 @@ def choropleth_map(data: gpd.GeoDataFrame, value_column: str, title: str, provid
 
 def choropleth_map(data: gpd.GeoDataFrame, value_column: str, title: str, provider: Literal["folium", "plotly", "matplotlib"], cmap='viridis') -> Map:
     if provider == "folium":
-        fig = data.explore(value_column, cmap=cmap, title=title)
+        fig = data.explore(value_column, cmap=cmap, title=title, scheme="NaturalBreaks")
     elif provider == "plotly":
         import plotly.express as px
         geom_all = data.geometry.union_all()

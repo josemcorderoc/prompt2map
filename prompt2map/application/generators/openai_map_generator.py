@@ -3,7 +3,6 @@ from typing import Any, Callable, Optional
 import geopandas as gpd
 
 from prompt2map.application.maps.choropleth_map import choropleth_map
-from prompt2map.application.maps.bar_chart_map import BarChartMap
 from prompt2map.interfaces.core.map_generator import MapGenerator
 from prompt2map.providers.openai import OpenAIProvider
 from prompt2map.types import Map
@@ -33,28 +32,28 @@ def get_available_tools(data: gpd.GeoDataFrame) -> list[dict[str, Any]]:
                 },
             }
         },
-        {
-            "type": "function",
-            "function": {
-                "name": "create_bar_chart_map",
-                "description": "Create a bar chart map",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "value_columns": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "enum": list(data.select_dtypes(include='number').columns)
-                            },
-                            "description": "The columns that will turn bars in the map.",
-                        }
+        # {
+        #     "type": "function",
+        #     "function": {
+        #         "name": "create_bar_chart_map",
+        #         "description": "Create a bar chart map",
+        #         "parameters": {
+        #             "type": "object",
+        #             "properties": {
+        #                 "value_columns": {
+        #                     "type": "array",
+        #                     "items": {
+        #                         "type": "string",
+        #                         "enum": list(data.select_dtypes(include='number').columns)
+        #                     },
+        #                     "description": "The columns that will turn bars in the map.",
+        #                 }
                         
-                    },
-                    "required": ["value_columns"],
-                },
-            }
-        },
+        #             },
+        #             "required": ["value_columns"],
+        #         },
+        #     }
+        # },
     ]
 
 
@@ -62,12 +61,12 @@ def create_choropleth_map(data: gpd.GeoDataFrame, title: str, value_column: str)
     # TODO check if any processing is needed
     return choropleth_map(data, value_column, title, "folium")
 
-def create_bar_chart_map(data: gpd.GeoDataFrame, value_columns: list[str]) -> Map:
-    return BarChartMap(data=data, value_columns=value_columns)
+# def create_bar_chart_map(data: gpd.GeoDataFrame, value_columns: list[str]) -> Map:
+#     return BarChartMap(data=data, value_columns=value_columns)
 
 available_functions: dict[str, Callable[..., Map]] = {
     "create_choropleth_map": create_choropleth_map,
-    "create_bar_chart_map": create_bar_chart_map,   
+    # "create_bar_chart_map": create_bar_chart_map,   
 }
 
 class OpenAIMapGenerator(MapGenerator):
