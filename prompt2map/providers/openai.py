@@ -97,13 +97,11 @@ class OpenAIProvider(LLM, Embedding):
         self.logger.info(f"Function args: {function_args}")
         
         function_args |= kwargs
-        self.logger.info(f"Function args merged with kwargs: {function_args}")
+        self.logger.info(f"Function args merged with kwargs {list(kwargs.keys())}")
 
         function_response = function_to_call(
             **{key: value for key, value in function_args.items() if key in inspect.signature(function_to_call).parameters}
         )
-        self.logger.info(f"Function response: {function_response}")
-        
         return function_response
     
     def get_embedding(self, text: str) -> np.ndarray:
