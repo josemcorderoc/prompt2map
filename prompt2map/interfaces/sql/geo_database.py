@@ -26,3 +26,6 @@ class GeoDatabase(Protocol):
         
     def get_geo_agg_function(self) -> str:
         ...
+        
+    def value_in_column(self, table: str, column: str, value: str) -> bool:
+        ...
