@@ -140,6 +140,6 @@ class PostgresDB(GeoDatabase):
     def get_geo_agg_function(self) -> str:
         return self.geo_agg_function
 
-
-
-       
+    def value_in_column(self, table: str, column: str, value: str) -> bool:
+        return len(pd.read_sql(f"SELECT 1 FROM {table} WHERE {column} = %s LIMIT 1;", 
+                           con=self.engine, params=(value,))) > 0

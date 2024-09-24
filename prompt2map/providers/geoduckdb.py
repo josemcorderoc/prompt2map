@@ -174,4 +174,9 @@ class GeoDuckDB(GeoDatabase):
     def get_geo_agg_function(self) -> str:
         return self.geo_agg_function
 
+    def value_in_column(self, table: str, column: str, value: str) -> bool:
+        result = self.connection.sql(f"SELECT 1 FROM {table} WHERE {column} = ? LIMIT 1;", params=[value])
+        return len(result) > 0
+
+
 
