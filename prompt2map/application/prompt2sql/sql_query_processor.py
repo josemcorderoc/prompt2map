@@ -50,7 +50,7 @@ class SQLQueryProcessor:
         
         where = parsed_query.find(exp.Where)
         if where is None:
-            raise ValueError(f"Query {parsed_query.sql()} does not contain a WHERE clause.")
+            return {}
         
         literals: dict[tuple[str, str], exp.Literal] = {}
         for eq in where.find_all(exp.EQ):
