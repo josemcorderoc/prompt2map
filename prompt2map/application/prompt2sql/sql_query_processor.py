@@ -40,7 +40,7 @@ class SQLQueryProcessor:
         self.db = db
         self.embedding = embedding
     
-    def get_literals(self, parsed_query: exp.Expression) -> dict[tuple[str, str], exp.Literal]:
+    def get_sql_literals(self, parsed_query: exp.Expression) -> dict[tuple[str, str], exp.Literal]:
         # parsed_query = parse_one(query)
         table_alias = {t.alias:t.name for t in parsed_query.find_all(exp.Table)}
         
@@ -86,7 +86,7 @@ class SQLQueryProcessor:
             str: SQL query with literals replaced
         """
         parsed_query = parse_one(query)
-        query_literals = self.get_literals(parsed_query)
+        query_literals = self.get_sql_literals(parsed_query)
         if len(query_literals) == 0:
             self.logger.warning(f"Query {query} does not contain any literals.")
             return query
