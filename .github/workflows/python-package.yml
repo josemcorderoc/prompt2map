@@ -17,10 +17,9 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         python-version: ["3.10", "3.11", "3.12"]
-        pandas-version: ["2.0", "2.1", "2.2"]
         duckdb-version: ["1.0", "1.1"]
-        psycopg-version: ["3.0", "3.1", "3.2"]
-        pyarrow-version: ["15", "16", "17"]
+        psycopg-version: ["3.1", "3.2"]
+        pyarrow-version: ["16", "17"]
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -35,11 +34,10 @@ jobs:
         
         python -c '
         import re, sys
-        pattern = re.compile(r"^(pandas|duckdb|psycopg|pyarrow)[=<>!~]")
+        pattern = re.compile(r"^(duckdb|psycopg|pyarrow)[=<>!~]")
         [print(line, end="") for line in open(sys.argv[1], "r") if not pattern.match(line)]
         ' requirements.txt > temp_requirements.txt
 
-        echo "pandas==${{ matrix.pandas-version }}" >> temp_requirements.txt
         echo "psycopg==${{ matrix.psycopg-version }}" >> temp_requirements.txt
         echo "pyarrow==${{ matrix.pyarrow-version }}" >> temp_requirements.txt
         echo "duckdb==${{ matrix.duckdb-version }}" >> temp_requirements.txt
