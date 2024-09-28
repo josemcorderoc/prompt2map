@@ -30,18 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        
-        python -c '
-        import re, sys
-        pattern = re.compile(r"^(psycopg|pyarrow)[=<>!~]")
-        [print(line, end="") for line in open(sys.argv[1], "r") if not pattern.match(line)]
-        ' requirements.txt > temp_requirements.txt
-
-        echo "psycopg==${{ matrix.psycopg-version }}" >> temp_requirements.txt
-        echo "pyarrow==${{ matrix.pyarrow-version }}" >> temp_requirements.txt
-
-        rm requirements.txt && mv temp_requirements.txt requirements.txt
-
+        echo "psycopg-binary" >> requirements.txt
         pip install -e .[test]
     - name: Lint with flake8
       run: |
