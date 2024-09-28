@@ -33,7 +33,7 @@ jobs:
         
         python -c '
         import re, sys
-        pattern = re.compile(r"^(duckdb|psycopg|pyarrow)[=<>!~]")
+        pattern = re.compile(r"^(psycopg|pyarrow)[=<>!~]")
         [print(line, end="") for line in open(sys.argv[1], "r") if not pattern.match(line)]
         ' requirements.txt > temp_requirements.txt
 
