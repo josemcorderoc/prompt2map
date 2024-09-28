@@ -23,9 +23,9 @@ dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
 test = [
-    "pytest==8.3.3",
-    "pytest-mock==3.14.0",
-    "flake8==7.1.0"
+    "pytest~=8.3",
+    "pytest-mock~=3.14",
+    "flake8~=7.1"
 ]
 
 [project.urls]
