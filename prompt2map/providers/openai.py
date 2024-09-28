@@ -1,7 +1,7 @@
 import inspect
 import json
 import logging
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, Callable, Iterable, Literal, Optional, TypeVar
 import jsonlines
 import numpy as np
 from openai.types import Batch
@@ -112,7 +112,7 @@ class OpenAIProvider(LLM, Embedding):
         return np.array(embedding)
     
     
-    def send_batch_embedding(self, requests, input_file_name: str) -> str:
+    def send_batch(self, requests: Iterable[dict], input_file_name: str, endpoint: Literal["/v1/chat/completions", "/v1/embeddings", "/v1/completions"]) -> str:
         # Write the requests to a jsonl file
         with jsonlines.open(input_file_name, mode='w') as writer:
             writer.write_all(requests)
@@ -126,7 +126,7 @@ class OpenAIProvider(LLM, Embedding):
         # Send the batch to OpenAI
         openai_batch = self.client.batches.create(
             input_file_id=batch_input_file.id,
-            endpoint="/v1/embeddings",
+            endpoint=endpoint,
             completion_window="24h",
             metadata={
                 "description": "testing",
