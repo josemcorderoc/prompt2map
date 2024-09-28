@@ -7,14 +7,24 @@ name = "prompt2map"
 description = "Dynamic maps generation based on natural language prompts using Retrieval-Augmented Generation (RAG)"
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [
-    { name = "José Miguel Cordero Carvacho" }
-]
-license = { text = "Copyright (c) 2024 José Miguel Cordero Carvacho" }
+authors = [{ name = "José Miguel Cordero Carvacho", email="josemcorderoc@gmail.com" }]
+maintainers = [{ name = "José Miguel Cordero Carvacho", email="josemcorderoc@gmail.com" }]
+license = {text = "MIT License"}
+keywords = ["maps", "mapping", "cartography", "gis", "webgis", "geospatial", "llm", "nlp", "prompt"]
 classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: GIS",
+
+    "License :: OSI Approved :: MIT License",
+
     "Programming Language :: Python :: 3",
-    "License :: Other/Proprietary License",
-    "Operating System :: OS Independent"
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    
+    "Operating System :: OS Independent",
 ]
 dynamic = ["dependencies", "version"]
 
@@ -23,13 +33,13 @@ dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
 test = [
-    "pytest==8.3.3",
-    "pytest-mock==3.14.0",
-    "flake8==7.1.0"
+    "pytest~=8.3",
+    "pytest-mock~=3.14",
+    "flake8~=7.1"
 ]
 
 [project.urls]
-Homepage = "https://github.com/josemcorderoc/prompt2map"
+Repository = "https://github.com/josemcorderoc/prompt2map"
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "examples"]
