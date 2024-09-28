@@ -2,6 +2,7 @@ import inspect
 import json
 import logging
 from typing import Any, Callable, Iterable, Literal, Optional, TypeVar
+from duckdb import DEFAULT
 import jsonlines
 import numpy as np
 from openai.types import Batch
@@ -12,28 +13,30 @@ from prompt2map.interfaces.nlp.llm import LLM
 
 T = TypeVar('T')
 
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
+DEFAULT_LLM_MODEL = "gpt-4o"
 
-def generate_openai_embedding_request(id: int, text: str) -> dict:
+def generate_openai_embedding_request(id: int, text: str, model: str = DEFAULT_EMBEDDING_MODEL) -> dict:
     return {
         "custom_id": f"embedding_request_{id}",
         "method": "POST",
         "url": "/v1/embeddings",
         "body": {
             "input": text,
-            "model": "text-embedding-3-small",
+            "model": model,
         }
     }
     
-def generate_openai_completion_request(id: int, system_prompt: Optional[str] = None, user_prompt: Optional[str] = None) -> dict:
+def generate_openai_completion_request(id: int, max_tokens: int, system_prompt: Optional[str] = None, user_prompt: Optional[str] = None, model: str = DEFAULT_LLM_MODEL) -> dict:
     messages = get_messages(system_prompt, user_prompt)
     return {
         "custom_id": f"request-{id}",
         "method": "POST",
         "url": "/v1/chat/completions",
         "body": {
-            "model": "gpt-4o",
+            "model": DEFAULT_LLM_MODEL,
             "messages": messages,
-            "max_tokens": 10
+            "max_tokens": max_tokens
         }
     }
 def get_messages(system_prompt: Optional[str] = None, user_prompt: Optional[str] = None) -> list[dict[str, str]]:
@@ -47,7 +50,7 @@ def get_messages(system_prompt: Optional[str] = None, user_prompt: Optional[str]
     return messages
 
 class OpenAIProvider(LLM, Embedding):
-    def __init__(self, model_name: str = "gpt-4o", embedding_model_name: str = 'text-embedding-3-small', api_key: Optional[str] = None) -> None:
+    def __init__(self, model_name: str = DEFAULT_LLM_MODEL, embedding_model_name: str = DEFAULT_EMBEDDING_MODEL, api_key: Optional[str] = None) -> None:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.client = OpenAI(api_key=api_key)
         self.model_name = model_name
