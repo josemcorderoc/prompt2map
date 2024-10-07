@@ -35,7 +35,8 @@ dependencies = {file = ["requirements.txt"]}
 test = [
     "pytest~=8.3",
     "pytest-mock~=3.14",
-    "flake8~=7.1"
+    "flake8~=7.1",
+    "pytest-cov~=5.0"
 ]
 
 [project.urls]
