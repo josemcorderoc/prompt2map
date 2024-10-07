@@ -1,8 +1,7 @@
 import inspect
 import json
 import logging
-from typing import Any, Callable, Iterable, Literal, Optional, TypeVar
-from duckdb import DEFAULT
+from typing import Any, Callable, Iterable, Literal, Optional
 import jsonlines
 import numpy as np
 from openai.types import Batch
@@ -10,8 +9,8 @@ from openai import OpenAI
 
 from prompt2map.interfaces.nlp.embedding import Embedding
 from prompt2map.interfaces.nlp.llm import LLM
+from prompt2map.types import T
 
-T = TypeVar('T')
 
 DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
 DEFAULT_LLM_MODEL = "gpt-4o"
@@ -69,7 +68,7 @@ class OpenAIProvider(LLM, Embedding):
             return output
         raise ValueError("No response from GPT4Chat")
     
-    def function_calling(self, user_prompt: Optional[str], system_prompt: Optional[str], tools: list[dict], tool_choice: str = "auto") -> Optional[list[Any]] :
+    def get_tool_calls(self, user_prompt: Optional[str], system_prompt: Optional[str], tools: list[dict], tool_choice: str = "auto") -> Optional[list[Any]] :
         messages = get_messages(system_prompt, user_prompt)
             
         response = self.client.chat.completions.create(
@@ -80,9 +79,9 @@ class OpenAIProvider(LLM, Embedding):
         )
         return response.choices[0].message.tool_calls
     
-    def function_calling_python(self, user_prompt: Optional[str], system_prompt: Optional[str], functions: dict[str, Callable[..., T]], tools: list[dict], tool_choice: str = "auto", **kwargs) -> Optional[T]:
+    def function_calling(self, user_prompt: Optional[str], system_prompt: Optional[str], functions: dict[str, Callable[..., T]], tools: list[dict], tool_choice: str = "auto", **kwargs) -> Optional[T]:
         # tools = get_available_tools(data)
-        tool_calls = self.function_calling(user_prompt, system_prompt, tools, tool_choice)
+        tool_calls = self.get_tool_calls(user_prompt, system_prompt, tools, tool_choice)
         if tool_calls is None or len(tool_calls) == 0:
             self.logger.error("No tool calls found")
             return None
