@@ -61,7 +61,7 @@ def dummy_generate_map(self, prompt: str, data: gpd.GeoDataFrame) -> Optional[Ma
 
 def test_prompt2map_from_file(mocker, geodata_parquet, embeddings_parquet, variable_descriptions_csv):
     # mocks
-    mocker.patch('prompt2map.application.generators.openai_map_generator.OpenAIMapGenerator.generate', dummy_generate_map)
+    mocker.patch('prompt2map.application.generators.llm_map_generator.LLMMapGenerator.generate', dummy_generate_map)
     mocker.patch.object(OpenAIProvider, "__init__", lambda x: None)
     
     geodf = gpd.read_parquet(geodata_parquet)
