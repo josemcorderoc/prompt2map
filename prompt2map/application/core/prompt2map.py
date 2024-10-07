@@ -2,7 +2,7 @@ from typing import Optional
 from typing_extensions import Self
 import geopandas as gpd
 
-from prompt2map.application.generators.openai_map_generator import OpenAIMapGenerator
+from prompt2map.application.generators.llm_map_generator import LLMMapGenerator
 from prompt2map.application.prompt2sql.llm_prompt2sql import LLMPrompt2SQL
 from prompt2map.application.prompt2sql.sql_query_processor import SQLQueryProcessor
 from prompt2map.application.retrievers.sql_geo_retriever import SQLGeoRetriever
@@ -37,7 +37,7 @@ class Prompt2Map:
         query_processor = SQLQueryProcessor(db, openai_provider)
         prompt2sql = LLMPrompt2SQL(openai_provider, db.get_schema())
         sql_retrievier = SQLGeoRetriever(db, prompt2sql=prompt2sql, sql_query_processor=query_processor)
-        openai_generator = OpenAIMapGenerator(openai_provider)
+        openai_generator = LLMMapGenerator(openai_provider)
         return cls(retriever=sql_retrievier, generator=openai_generator)
     
     @classmethod
@@ -47,5 +47,5 @@ class Prompt2Map:
         query_processor = SQLQueryProcessor(db, openai_provider)
         prompt2sql = LLMPrompt2SQL(openai_provider, db.get_schema())
         sql_retrievier = SQLGeoRetriever(db, prompt2sql=prompt2sql, sql_query_processor=query_processor)
-        openai_generator = OpenAIMapGenerator(openai_provider)
+        openai_generator = LLMMapGenerator(openai_provider)
         return cls(retriever=sql_retrievier, generator=openai_generator)
