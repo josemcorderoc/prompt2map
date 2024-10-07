@@ -71,7 +71,7 @@ class OpenAIProvider(LLM, Embedding):
     def get_tool_calls(self, user_prompt: Optional[str], system_prompt: Optional[str], tools: list[dict], tool_choice: str = "auto") -> Optional[list[Any]] :
         messages = get_messages(system_prompt, user_prompt)
             
-        response = self.client. (
+        response = self.client.chat.completions.create(
             model=self.model_name,
             messages=messages, # type: ignore
             tools=tools, # type: ignore
