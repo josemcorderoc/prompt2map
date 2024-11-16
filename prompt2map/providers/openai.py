@@ -79,7 +79,8 @@ class OpenAIProvider(LLM, Embedding):
         )
         return response.choices[0].message.tool_calls
     
-    def function_calling(self, user_prompt: Optional[str], system_prompt: Optional[str], functions: dict[str, Callable[..., T]], tools: list[dict], tool_choice: str = "auto", **kwargs) -> Optional[T]:
+    def function_calling(self, user_prompt: Optional[str], system_prompt: Optional[str], functions: dict[str, Callable[..., T]], 
+                         tools: list[dict], tool_choice: str = "auto", **kwargs) -> Optional[tuple[T, dict]]:
         # tools = get_available_tools(data)
         tool_calls = self.get_tool_calls(user_prompt, system_prompt, tools, tool_choice)
         if tool_calls is None or len(tool_calls) == 0:
@@ -104,7 +105,7 @@ class OpenAIProvider(LLM, Embedding):
         function_response = function_to_call(
             **{key: value for key, value in function_args.items() if key in inspect.signature(function_to_call).parameters}
         )
-        return function_response
+        return function_response, function_args
     
     def get_embedding(self, text: str) -> np.ndarray:
         embedding = self.client.embeddings.create(
