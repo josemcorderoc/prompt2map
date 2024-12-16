@@ -1,6 +1,6 @@
 bidict~=0.23
 click~=8.1
-folium~=0.17
+folium~=0.19
 geopandas~=1.0
 jsonlines~=4.0
 matplotlib~=3.9
